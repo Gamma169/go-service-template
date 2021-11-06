@@ -1,0 +1,18 @@
+#!/bin/bash
+echo 'Stopping postgres'
+docker stop foobar_post
+echo 'Removing foobar_post if there'
+docker rm foobar_post
+echo 'Starting postgres docker database'
+docker run -d --name=foobar_post -e POSTGRES_HOST_AUTH_METHOD=trust -p 5432:5432 postgres:9.6.17-alpine
+echo 'Sleeping a bit for database to start'
+sleep 4
+echo 'Creating database'
+docker exec -it foobar_post psql -h localhost -U postgres -p 5432 -c 'CREATE DATABASE foo;'
+
+echo 'Sleeping another few seconds'
+sleep 4
+echo 'Building Server'
+./scripts/build foobar
+echo 'Starting server'
+DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 ./bin/foobar

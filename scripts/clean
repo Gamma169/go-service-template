@@ -1,0 +1,14 @@
+#!/bin/bash
+# This can be bash because it is not used in the docker build
+
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+PROJECT_ROOT=$(cd $SCRIPTS_DIR/.. && pwd)
+
+cd $PROJECT_ROOT
+
+for name in bin lib; do
+    if [ -d $name ]; then
+        rm -rf $name
+    fi
+done
