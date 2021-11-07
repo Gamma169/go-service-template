@@ -1,0 +1,28 @@
+{
+  "name": "foobar_tests",
+  "version": "1.0.0",
+  "directories": {
+    "doc": "doc",
+    "test": "tests"
+  },
+  "repository": "",
+  "scripts": {
+    "test": "node runner",
+    "clean": "rm -rf node_modules"
+  },
+  "license": "",
+  "devDependencies": {
+    "capture-exit": "^1.2.0",
+    "chai": "^4.1.0",
+    "chai-http": "^3.0.0",
+    "eslint": "^4.3.0",
+    "mocha": "^3.4.2",
+    "mocha-eslint": "^4.1.0",
+    "moment": "^2.24.0",
+    "pg": "^7.4.1"
+  },
+  "engines": {
+    "node": ">= 7.6"
+  },
+  "private": true
+}

@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # This can be bash because it is not used in the docker build
 
 # from https://stackoverflow.com/questions/242538/unix-shell-script-find-out-which-directory-the-script-file-resides?rq=1
@@ -9,10 +10,19 @@ SCRIPTS_DIR=$(dirname "$SCRIPT")
 
 PROJECT_ROOT=$(cd $SCRIPTS_DIR/.. && pwd)
 
-cd $PROJECT_ROOT
+pushd ${PROJECT_ROOT}/tests > /dev/null
 
-for name in bin lib tests/node_modules; do
-    if [ -d $name ]; then
-        rm -rf $name
-    fi
-done
+yarn install
+yarn test
+
+status_code=$?
+
+if [ -f yarn-error.log ]; then
+    rm yarn-error.log
+fi
+
+if [ $status_code -ne 0 ]; then
+    exit $status_code
+fi
+
+popd > /dev/null
