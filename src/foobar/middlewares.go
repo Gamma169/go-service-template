@@ -28,7 +28,6 @@ func UserIdHeaderMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         
         userId := r.Header.Get("user-id")
-        
         if userId == "" {
             msg := "No 'user-id' header"
             debugLog(msg)
@@ -46,7 +45,6 @@ func UserIdHeaderMiddleware(next http.Handler) http.Handler {
         next.ServeHTTP(w, r)
     })
 }
-
 
 
 func loggingMiddleware(next http.Handler) http.Handler {

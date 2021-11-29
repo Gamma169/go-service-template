@@ -33,7 +33,7 @@ FROM golang:1.17-alpine as runner
 
 # It seems I have to copy these
 # TODO: Would be good if I didn't have to copy them
-# And would be good if I could configure it
+# And would be good if I could configure it in the CMD line as well
 
 ARG app_name=foobar
 ARG service_root=/opt/service

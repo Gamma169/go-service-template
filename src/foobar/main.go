@@ -77,8 +77,8 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
         panic(err)
     }
 
-    debugLog("foobar Healthy (☆^ー^☆)")
-    json.NewEncoder(w).Encode("foobar Healthy! (☆^ー^☆)")
+    debugLog("foobar + DB connections Healthy (☆^ー^☆)")
+    json.NewEncoder(w).Encode("foobar + DB connections Healthy! (☆^ー^☆)")
 }
 
 
