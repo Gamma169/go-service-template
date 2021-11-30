@@ -6,7 +6,8 @@ import (
     // "fmt"
     // "github.com/google/uuid"
     // "github.com/gorilla/mux"
-    // "net/http"
+    "github.com/google/jsonapi"
+    "net/http"
     "strings"
     "time"
 )
@@ -67,7 +68,6 @@ func initFoobarModelsPreparedStatements() {
         FROM foobar_models f
         WHERE f.user_id = ($1);
     `)
-    debugLog(err)
 
 
 // TODO Can make one for all as well to avoid multiple networks calls
@@ -85,7 +85,6 @@ func initFoobarModelsPreparedStatements() {
         )
         VALUES (($1), ($2), ($3), ($4), ($5), ($6), ($7), ($8))
     `)
-    debugLog(err)
     
 
     updateFoobarStmt, err = DB.Prepare(`
@@ -98,12 +97,10 @@ func initFoobarModelsPreparedStatements() {
         WHERE
             id = ($6);
     `)
-    debugLog(err)
 
     deleteFoobarStmt, err = DB.Prepare(`
         DELETE FROM foobar_models WHERE id = ($1);
     `)
-    debugLog(err)
 
 // TODO
 //     deleteSubmodelStmt, err = DB.Prepare(`
@@ -111,3 +108,46 @@ func initFoobarModelsPreparedStatements() {
 //     `)
 
 }
+
+/*********************************************
+ * Request Handlers
+ * *******************************************/
+
+
+func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
+    debugLog("Received request to get FoobarModels for user")
+
+    // Should exist and be valid because of middleware
+    userId := r.Header.Get("user-id")
+
+    foobarModels, err, errStatus := getFoobarModelsForUser(userId)
+    if err != nil {
+        debugLog(err)
+        http.Error(w, err.Error(), errStatus)
+        return
+    }
+
+    w.Header().Set("Content-Type", jsonapi.MediaType)
+    if err := jsonapi.MarshalPayload(w, foobarModels); err != nil {
+        debugLog(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
+    debugLog("Found FoobarModels!")
+}
+
+
+/*********************************************
+ * Database Functions
+ * *******************************************/
+
+// TODO
+func getFoobarModelsForUser(userId string) ([]*FoobarModel, error, int) {
+    _, err := getFoobarModelStmt.Query(userId)
+    if err != nil {
+        return nil, err, http.StatusInternalServerError
+    }
+    return nil, nil, 0
+}
+
+
