@@ -76,9 +76,28 @@ describe('foobar Model Tests:', function() {
           .set('user-id', id)
           .then(function(resp) {
             
-            console.log(resp.body);
-            done();
+            const returnedModels = resp.body;
+            chai.assert.equal(modelsForId.length, returnedModels.length, "returns same number of models as in testcases");
+            modelsForId.forEach(mockModel => {
+              const returnedModel = returnedModels.find(retModel => retModel.id === mockModel.id);
 
+              chai.assert.deepInclude(returnedModel, {
+                id: mockModel.id,
+                name: mockModel.name,
+                age: mockModel.age,
+                someProp: mockModel.some_prop,
+                someNullableProp: mockModel.some_nullable_prop,
+                someArrProp: mockModel.some_arr_prop,
+              }, "models match");
+
+              // golang json encoding time field returns much more precision than what I provide in the mocks so we do date checking seperately
+              chai.assert.include(returnedModel.dateCreated, mockModel.date_created, "mock dateCreated is in returned date");
+              chai.assert.include(returnedModel.lastUpdated, mockModel.last_updated, "mock lastUpdated is in returned date");
+              
+            });
+
+            // Test is sucessful
+            done();
 
           }, done)
           .catch(done);

@@ -25,6 +25,9 @@ func getOptionalEnv(envVar string, defaultVal string) string {
 
 
 func checkRequiredEnvs() {
+    // Not sure if I should use the getOptionalEnv function here or just os.LookupEnv
+    // Because if I use getOptionalEnv and it doesn't exist, we output the logs for it twice
+    // I think that's fine, but I need to think on it
     if getOptionalEnv("DATABASE_URL", "") == "" {
         getRequiredEnv("DATABASE_NAME")
         getRequiredEnv("DATABASE_HOST")

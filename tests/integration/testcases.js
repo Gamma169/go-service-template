@@ -53,7 +53,7 @@ function dbSetupModels(pgClient) {
         date_created, last_updated
       ) VALUES (
         '${model.id}', '${model.user_id}', 
-        '${model.name}', '${model.age}', '${model.some_prop}', '${model.some_nullable_prop}', '${arrStr}', 
+        '${model.name}', '${model.age}', '${model.some_prop}', ${model.some_nullable_prop ? `'${model.some_nullable_prop}'` : null}, '${arrStr}', 
         '${model.date_created}', '${model.last_updated}'
       );`);
   });

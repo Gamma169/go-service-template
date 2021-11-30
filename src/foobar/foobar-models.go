@@ -24,6 +24,7 @@ type FoobarModel struct {
     DateCreated          time.Time  `json:"dateCreated" jsonapi:"attr,date-created"`
     LastUpdated          time.Time  `json:"lastUpdated" jsonapi:"attr,last-updated"`
 
+    // Only needed for jsonapi save-relationships-mixin
     TempID               string     `jsonapi:"attr,__id__"`
 
     // TODO
@@ -171,7 +172,6 @@ func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
     if foobarModels, err, errStatus = getModelsForRequester(requesterId); err != nil {
         return
     }
-    debugLog(foobarModels)
 
     header := r.Header.Get(ContentTypeHeader)
     if header == jsonapi.MediaType {
