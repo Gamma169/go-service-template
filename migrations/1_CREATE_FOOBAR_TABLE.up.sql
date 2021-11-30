@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS foobar_models (
 	age int NOT NULL,
 	some_prop varchar(255) NOT NULL,
 	some_nullable_prop varchar(255),
+	some_arr_prop varchar(255) NOT NULL,
 	
 
 	date_created timestamp with time zone NOT NULL DEFAULT NOW(),

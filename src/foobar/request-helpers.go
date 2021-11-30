@@ -7,6 +7,9 @@ import (
     "net/http"
 )
 
+const ContentTypeHeader = "Content-Type"
+const JSONContentType = "application/json"
+
 type InputObject interface {
 	Validate() error
 }
@@ -14,9 +17,8 @@ type InputObject interface {
 func PreProcessInput(input InputObject, r *http.Request) (error, int) {
 	var err error
 
-    header := r.Header.Get("Content-Type")
-    
-    if header == "application/json" {
+    header := r.Header.Get(ContentTypeHeader)
+    if header == JSONContentType {
         
         dec := json.NewDecoder(r.Body)
         dec.DisallowUnknownFields()
@@ -41,4 +43,12 @@ func PreProcessInput(input InputObject, r *http.Request) (error, int) {
     }
 
     return nil, 0
+}
+
+
+func sendErrorOnError(err error, status int, w http.ResponseWriter, r *http.Request) {
+    if err != nil {
+        logError(err, r)
+        http.Error(w, err.Error(), status)
+    }
 }

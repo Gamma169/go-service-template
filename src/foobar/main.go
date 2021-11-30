@@ -26,21 +26,26 @@ import (
 
 
 /*********************************************
- * Globals
+ * Globals Vars + Config Consts -- Some helper consts are in their respective files
  * *******************************************/
 
 // An all-zero uuid constant.  Should not be considered valid by our system.
 const ZERO_UUID = "00000000-0000-0000-0000-000000000000"
+const TRACE_ID_HEADER = "request-id"
+const REQUESTER_ID_HEADER = "user-id"
 
 const SERVICE_PORT_ENV_VAR = "FOOBAR_PORT"
 const DEFAULT_PORT = "7890"
+
+const DB_ARRAY_DELIMITER = ":::"
 
 var releaseMode string
 var debug bool
 
 var DB *sql.DB
 
-var getFoobarModelStmt *sql.Stmt
+
+var getFoobarModelsStmt *sql.Stmt
 var postFoobarModelStmt *sql.Stmt
 var updateFoobarStmt *sql.Stmt
 var deleteFoobarStmt *sql.Stmt
@@ -82,7 +87,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
         panic(err)
     }
 
-    debugLog("foobar + DB connections Healthy (☆^ー^☆)")
+    debugLog(BluePrint + "foobar + DB connections Healthy (☆^ー^☆)" + EndPrint)
     json.NewEncoder(w).Encode("foobar + DB connections Healthy! (☆^ー^☆)")
 }
 
@@ -95,7 +100,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
     router := mux.NewRouter()
     
-    router.Path("/health").Methods("GET").HandlerFunc(HealthHandler)
+    router.Path("/health").Methods(http.MethodGet).HandlerFunc(HealthHandler)
 
     if getOptionalEnv("RUNNING_LOCALLY", "true") == "true" {
         AddCORSMiddlewareAndEndpoint(router)
@@ -110,7 +115,7 @@ func main() {
     s := router.PathPrefix("/user").Subrouter()
     s.Use(UserIdHeaderMiddleware)
     // s.Path("/").Methods("GET").HandlerFunc(GetUserHandler)
-    
+    s.Path("/foobar-models").Methods(http.MethodGet).HandlerFunc(GetFoobarModelHandler)
 
     
     // TODO
@@ -135,7 +140,7 @@ func main() {
     
     // Run our server in a goroutine so that it doesn't block.
     go func() {
-        if err := server.ListenAndServe(); err != nil {
+        if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
             logError(err, nil)
         }
     }()

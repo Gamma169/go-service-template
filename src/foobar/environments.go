@@ -25,9 +25,11 @@ func getOptionalEnv(envVar string, defaultVal string) string {
 
 
 func checkRequiredEnvs() {
-    getRequiredEnv("DATABASE_NAME")
-    getRequiredEnv("DATABASE_HOST")
-    getRequiredEnv("DATABASE_USER")
+    if getOptionalEnv("DATABASE_URL", "") == "" {
+        getRequiredEnv("DATABASE_NAME")
+        getRequiredEnv("DATABASE_HOST")
+        getRequiredEnv("DATABASE_USER")
+    }
 }
 
 

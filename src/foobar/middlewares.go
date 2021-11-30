@@ -19,7 +19,7 @@ func AddCORSMiddlewareAndEndpoint(router *mux.Router) {
         })
     })
     // Any options requests return 204-- to be used with above CORS stuff
-    router.PathPrefix("/").Methods("OPTIONS").HandlerFunc(func (w http.ResponseWriter, r *http.Request) {w.WriteHeader(http.StatusNoContent)})
+    router.PathPrefix("/").Methods(http.MethodOptions).HandlerFunc(func (w http.ResponseWriter, r *http.Request) {w.WriteHeader(http.StatusNoContent)})
 }
 
 
@@ -27,15 +27,15 @@ func AddCORSMiddlewareAndEndpoint(router *mux.Router) {
 func UserIdHeaderMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         
-        userId := r.Header.Get("user-id")
-        if userId == "" {
-            msg := "No 'user-id' header"
+        requesterId := r.Header.Get(REQUESTER_ID_HEADER)
+        if requesterId == "" {
+            msg := "No '" + REQUESTER_ID_HEADER + "' header"
             debugLog(msg)
             http.Error(w, msg, http.StatusBadRequest)
             return
         }
-        if _, err := uuid.Parse(userId); err != nil {
-            msg := "'user-id' is not valid UUID"
+        if _, err := uuid.Parse(requesterId); err != nil {
+            msg := REQUESTER_ID_HEADER + "- is not valid UUID"
             debugLog(msg)
             http.Error(w, msg, http.StatusBadRequest)
             return   
@@ -49,7 +49,18 @@ func UserIdHeaderMiddleware(next http.Handler) http.Handler {
 
 func loggingMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        debugLog(r.RequestURI)
+        requestId := r.Header.Get(TRACE_ID_HEADER)
+        if requestId == "" {
+            requestId = uuid.New().String()
+            r.Header.Set(TRACE_ID_HEADER, requestId)
+        }
+
+        // I thought of using fmt.Sprintf, but it seems that the plus sign is actually the most efficient
+        // TODO: Check/benchmark efficiency of this specific use case
+        debugLog(BoldPrint + HeaderPrint + "Recieved: " + r.RequestURI + " -- " + requestId + EndPrint)
         next.ServeHTTP(w, r)
+        // TODO: Prob implement custom responseWriter to be able to get status from request
+        // https://github.com/Gamma169/go-service-template/issues/2
+        debugLog(BoldPrint + HeaderPrint + "Finished: " + r.RequestURI + " -- " + requestId + " -- " + "[]" + EndPrint)
     })
 }
