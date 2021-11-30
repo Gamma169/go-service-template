@@ -40,6 +40,10 @@ var debug bool
 
 var DB *sql.DB
 
+var getFoobarModelStmt *sql.Stmt
+var postFoobarModelStmt *sql.Stmt
+var updateFoobarStmt *sql.Stmt
+var deleteFoobarStmt *sql.Stmt
 
 /*********************************************
  * Init and Shutdown
@@ -55,6 +59,7 @@ func init() {
     initDebug()
     initDB()
     initMigrations()
+    initFoobarModelsPreparedStatements()
 }
 
 
