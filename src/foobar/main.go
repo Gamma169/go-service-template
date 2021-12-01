@@ -132,7 +132,7 @@ func main() {
     }
     // This should be the only 'log' so that we have at least one line printed when the server starts in production mode
     log.Println("Server started -- Ready to accept connections")
-    debugLog(fmt.Sprintf("Listening on port: %s\n", port))
+    debugLog(fmt.Sprintf("Listening on port: %s", port))
 
     if debug {
         WalkRouter(router)

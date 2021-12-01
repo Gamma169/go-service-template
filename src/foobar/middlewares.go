@@ -57,10 +57,10 @@ func loggingMiddleware(next http.Handler) http.Handler {
 
         // I thought of using fmt.Sprintf, but it seems that the plus sign is actually the most efficient
         // TODO: Check/benchmark efficiency of this specific use case
-        debugLog(BoldPrint + HeaderPrint + "Recieved: " + r.RequestURI + " -- " + requestId + EndPrint)
+        debugLog(BoldPrint, HeaderPrint, "Recieved:", r.RequestURI, "--", requestId,  EndPrint)
         next.ServeHTTP(w, r)
         // TODO: Prob implement custom responseWriter to be able to get status from request
         // https://github.com/Gamma169/go-service-template/issues/2
-        debugLog(BoldPrint + HeaderPrint + "Finished: " + r.RequestURI + " -- " + requestId + " -- " + "[]" + EndPrint)
+        debugLog(BoldPrint, HeaderPrint, "Finished:", r.RequestURI, "--", requestId, "--", "[]", EndPrint)
     })
 }

@@ -23,8 +23,8 @@ func logError(err error, r *http.Request) {
     }
 }
 
-func debugLog(msg interface{}) {
+func debugLog(msg ...interface{}) {
     if debug {
-        fmt.Println(msg)
+        fmt.Println(msg, " ")
     }
 }
