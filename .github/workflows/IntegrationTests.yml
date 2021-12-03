@@ -46,9 +46,8 @@ jobs:
 
       - name: Build Service
         run: |
-          ls
           ./scripts/get_deps
-          ./scripts/build
+          ./scripts/build foobar
           ./bin/foo &
         env:
           DATABASE_NAME: foo
