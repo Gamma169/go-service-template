@@ -72,28 +72,66 @@ describe('foobar Model Tests:', function() {
 
         it('should be able to get json models for the user: ' + id, function(done) {
           chai.request(SERVICE_URL)
-          .get(`/user/foobar-models`)
+            .get('/user/foobar-models')
+            .set('user-id', id)
+            .then(function(resp) {
+              
+              const returnedModels = resp.body;
+              chai.assert.equal(modelsForId.length, returnedModels.length, "returns same number of models as in testcases");
+              modelsForId.forEach(mockModel => {
+                const returnedModel = returnedModels.find(retModel => retModel.id === mockModel.id);
+
+                chai.assert.deepInclude(returnedModel, {
+                  id: mockModel.id,
+                  name: mockModel.name,
+                  age: mockModel.age,
+                  someProp: mockModel.some_prop,
+                  someNullableProp: mockModel.some_nullable_prop,
+                  someArrProp: mockModel.some_arr_prop,
+                }, "models match");
+
+                // golang json encoding time field returns much more precision than what I provide in the mocks so we do date checking seperately
+                chai.assert.include(returnedModel.dateCreated, mockModel.date_created, "mock dateCreated is in returned date");
+                chai.assert.include(returnedModel.lastUpdated, mockModel.last_updated, "mock lastUpdated is in returned date");
+                
+              });
+
+              // Test is sucessful
+              done();
+
+            }, done)
+            .catch(done);
+        });
+
+
+        it('should be able to get jsonapi models for the user:' + id, function(done) {
+          chai.request(SERVICE_URL)
+          .get('/user/foobar-models')
           .set('user-id', id)
+          .set('Accept', 'application/vnd.api+json')
           .then(function(resp) {
             
             const returnedModels = resp.body;
-            chai.assert.equal(modelsForId.length, returnedModels.length, "returns same number of models as in testcases");
+            chai.assert.equal(modelsForId.length, returnedModels.data.length, "returns same number of models as in testcases");
             modelsForId.forEach(mockModel => {
-              const returnedModel = returnedModels.find(retModel => retModel.id === mockModel.id);
+              const returnedModel = returnedModels.data.find(retModel => retModel.id === mockModel.id);
 
-              chai.assert.deepInclude(returnedModel, {
+              chai.assert.deepEqual(returnedModel, {
+                attributes: {
+                  'name': mockModel.name,
+                  'age': mockModel.age,
+                  'some-prop': mockModel.some_prop,
+                  'some-nullable-prop': mockModel.some_nullable_prop,
+                  'some-arr-prop': mockModel.some_arr_prop,
+                  '__id__': "",
+                  // jsonapi library in golang returns seconds since 1970.  getTime returns mS, so slight convertion is necessary
+                  'date-created': new Date(mockModel.date_created).getTime()/1000,
+                  'last-updated': new Date(mockModel.last_updated).getTime()/1000,
+                },
                 id: mockModel.id,
-                name: mockModel.name,
-                age: mockModel.age,
-                someProp: mockModel.some_prop,
-                someNullableProp: mockModel.some_nullable_prop,
-                someArrProp: mockModel.some_arr_prop,
+                type: 'foobar-model',
               }, "models match");
 
-              // golang json encoding time field returns much more precision than what I provide in the mocks so we do date checking seperately
-              chai.assert.include(returnedModel.dateCreated, mockModel.date_created, "mock dateCreated is in returned date");
-              chai.assert.include(returnedModel.lastUpdated, mockModel.last_updated, "mock lastUpdated is in returned date");
-              
             });
 
             // Test is sucessful
@@ -101,11 +139,6 @@ describe('foobar Model Tests:', function() {
 
           }, done)
           .catch(done);
-        });
-
-        it.skip('should be able to get jsonapi models for the user:' + id, function(done) {
-          // TODO
-          done();
         });
 
       });

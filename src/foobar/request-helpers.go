@@ -8,6 +8,7 @@ import (
 )
 
 const ContentTypeHeader = "Content-Type"
+const AcceptContentTypeHeader = "Accept"
 const JSONContentType = "application/json"
 
 type InputObject interface {

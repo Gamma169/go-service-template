@@ -14,7 +14,7 @@ import (
 )
 
 type FoobarModel struct {
-    Id                   string     `json:"id", jsonapi:"primary,foobar-model"`
+    Id                   string     `json:"id" jsonapi:"primary,foobar-model"`
     Name                 string     `json:"name" jsonapi:"attr,name"`
     Age                  int        `json:"age" jsonapi:"attr,age"`
     SomeProp             string     `json:"someProp" jsonapi:"attr,some-prop"`
@@ -174,7 +174,8 @@ func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     header := r.Header.Get(ContentTypeHeader)
-    if header == jsonapi.MediaType {
+    acceptHeader := r.Header.Get(AcceptContentTypeHeader)
+    if header == jsonapi.MediaType || acceptHeader == jsonapi.MediaType {
         w.Header().Set(ContentTypeHeader, jsonapi.MediaType)
         if err = jsonapi.MarshalPayload(w, foobarModels); err != nil {
             return
