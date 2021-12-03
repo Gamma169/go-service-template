@@ -126,6 +126,7 @@ describe('foobar Model Tests:', function() {
                   // jsonapi library in golang returns seconds since 1970.  getTime returns mS, so slight convertion is necessary
                   'date-created': new Date(mockModel.date_created).getTime()/1000,
                   'last-updated': new Date(mockModel.last_updated).getTime()/1000,
+                  // This is only necessary for ember-save-relationships mixin
                   '__id__': "",
                 },
                 id: mockModel.id,
