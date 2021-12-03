@@ -14,6 +14,8 @@ jobs:
   
   mocha-tests:
     runs-on: ubuntu-latest
+    env:
+      SERVICE_NAME: foobar
     strategy:
       matrix:
         go: [ '1.17' ]
@@ -44,11 +46,14 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
 
+      - name: Get Dependencies
+        run: ./scripts/get_deps
+      
       - name: Build Service
-        run: |
-          ./scripts/get_deps
-          ./scripts/build foobar
-          ./bin/foo &
+        run:  ./scripts/build ${SERVICE_NAME}
+      
+      - name: Run Service In Background
+        run: ./bin/${SERVICE_NAME} &
         env:
           DATABASE_NAME: foo
           DATABASE_USER: postgres
