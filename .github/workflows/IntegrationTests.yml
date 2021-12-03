@@ -16,7 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.16', '1.17' ]
+        go: [ '1.17' ]
+        # Only need one version for now
+        # go: [ '1.16', '1.17' ]
 
     services:
       postgres:
@@ -45,9 +47,9 @@ jobs:
       - name: Build Service
         run: |
           ls
-          # ./sripts/get_deps
-          # ./scripts/build
-          # ./bin/foo &
+          ./scripts/get_deps
+          ./scripts/build
+          ./bin/foo &
         env:
           DATABASE_NAME: foo
           DATABASE_USER: postgres
