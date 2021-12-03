@@ -1,0 +1,71 @@
+
+name: Integration Tests
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+
+jobs:
+  
+  mocha-tests:
+    runs-on: ubuntu-latest
+    env:
+      SERVICE_NAME: foobar
+    strategy:
+      matrix:
+        go: [ '1.17' ]
+        # Only need one version for now
+        # go: [ '1.16', '1.17' ]
+
+    services:
+      postgres:
+        image: postgres:9.6.17-alpine
+        env:
+          POSTGRES_PASSWORD: somePassIdk
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: foo
+
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Add Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Get Dependencies
+        run: ./scripts/get_deps
+      
+      - name: Build Service
+        run:  ./scripts/build ${SERVICE_NAME}
+      
+      - name: Run Service In Background
+        run: ./bin/${SERVICE_NAME} &
+        env:
+          DATABASE_NAME: foo
+          DATABASE_USER: postgres
+          DATABASE_PASSWORD: somePassIdk
+          DATABASE_HOST: localhost
+
+      - name: Add Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '12.19'
+      
+      - name: Run Tests
+        run: ./scripts/run_tests.sh
