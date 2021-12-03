@@ -26,6 +26,7 @@ jobs:
       postgres:
         image: postgres:9.6.17-alpine
         env:
+          POSTGRES_PASSWORD: somePassIdk
           POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: foo
 
@@ -56,6 +57,7 @@ jobs:
         env:
           DATABASE_NAME: foo
           DATABASE_USER: postgres
+          DATABASE_PASSWORD: somePassIdk
           DATABASE_HOST: '127.0.0.1'
 
       - name: Add Node
