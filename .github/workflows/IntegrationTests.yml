@@ -58,7 +58,7 @@ jobs:
           DATABASE_NAME: foo
           DATABASE_USER: postgres
           DATABASE_PASSWORD: somePassIdk
-          DATABASE_HOST: '127.0.0.1'
+          DATABASE_HOST: localhost
 
       - name: Add Node
         uses: actions/setup-node@v2
