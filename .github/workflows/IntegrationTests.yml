@@ -44,19 +44,19 @@ jobs:
 
       - name: Build Service
         run: |
-          ./sripts/get_deps
-          ./scripts/build
-          ./bin/foo &
+          ls
+          # ./sripts/get_deps
+          # ./scripts/build
+          # ./bin/foo &
         env:
           DATABASE_NAME: foo
           DATABASE_USER: postgres
           DATABASE_HOST: '127.0.0.1'
 
-      - name: Add Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: '12.19'
+      # - name: Add Node
+      #   uses: actions/setup-node@v2
+      #   with:
+      #     node-version: '12.19'
       
-      - name: Run Tests
-        run: ./scripts/run_tests.sh
-
+      # - name: Run Tests
+      #   run: ./scripts/run_tests.sh
