@@ -36,6 +36,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Checkout Code
@@ -58,7 +60,7 @@ jobs:
           DATABASE_NAME: foo
           DATABASE_USER: postgres
           DATABASE_PASSWORD: somePassIdk
-          DATABASE_HOST: postgres
+          DATABASE_HOST: localhost
 
       - name: Add Node
         uses: actions/setup-node@v2
