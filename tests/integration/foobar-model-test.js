@@ -123,10 +123,10 @@ describe('foobar Model Tests:', function() {
                   'some-prop': mockModel.some_prop,
                   'some-nullable-prop': mockModel.some_nullable_prop,
                   'some-arr-prop': mockModel.some_arr_prop,
-                  '__id__': "",
                   // jsonapi library in golang returns seconds since 1970.  getTime returns mS, so slight convertion is necessary
                   'date-created': new Date(mockModel.date_created).getTime()/1000,
                   'last-updated': new Date(mockModel.last_updated).getTime()/1000,
+                  '__id__': "",
                 },
                 id: mockModel.id,
                 type: 'foobar-model',
