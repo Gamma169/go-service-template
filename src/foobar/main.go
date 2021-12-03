@@ -111,11 +111,10 @@ func main() {
 
 
 
-    // TODO
     s := router.PathPrefix("/user").Subrouter()
-    s.Use(UserIdHeaderMiddleware)
-    // s.Path("/").Methods("GET").HandlerFunc(GetUserHandler)
+    s.Use(RequesterIdHeaderMiddleware)
     s.Path("/foobar-models").Methods(http.MethodGet).HandlerFunc(GetFoobarModelHandler)
+    // s.Path("/").Methods("GET").HandlerFunc(GetUserHandler)
 
     
     // TODO

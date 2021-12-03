@@ -23,8 +23,8 @@ func AddCORSMiddlewareAndEndpoint(router *mux.Router) {
 }
 
 
-// Check if the user-id header exists and return 400 if not
-func UserIdHeaderMiddleware(next http.Handler) http.Handler {
+// Check if the REQUESTER_ID_HEADER exists and return 400 if not
+func RequesterIdHeaderMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         
         requesterId := r.Header.Get(REQUESTER_ID_HEADER)
