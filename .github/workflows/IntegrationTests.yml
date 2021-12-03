@@ -14,7 +14,6 @@ jobs:
   
   mocha-tests:
     runs-on: ubuntu-latest
-    container: node:12.19.1-alpine
     strategy:
       matrix:
         go: [ '1.16', '1.17' ]
@@ -35,13 +34,16 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v2
 
-      - name: build service
+      - name: Add Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go }}
-      - run: |
+
+      - name: Build Service
+        run: |
           ./sripts/get_deps
           ./scripts/build
           ./bin/foo &
@@ -50,6 +52,11 @@ jobs:
           DATABASE_USER: postgres
           DATABASE_HOST: '127.0.0.1'
 
+      - name: Add Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '12.19'
+      
       - name: Run Tests
         run: ./scripts/run_tests.sh
 
