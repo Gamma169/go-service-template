@@ -43,7 +43,7 @@ func (f *FoobarModel)Validate() error {
     return err
 }
 
-func (f *FoobarModel)ScanFromRowsOrRow(rows *sql.Rows, row *sql.Row) error {
+func (f *FoobarModel)ScanFromRowsOrRow(rows *sql.Rows, row *sql.Row) (err error) {
     // Define any vars that don't fit in the model
     var (
         nullableStr sql.NullString
@@ -59,12 +59,12 @@ func (f *FoobarModel)ScanFromRowsOrRow(rows *sql.Rows, row *sql.Row) error {
     }
 
     if rows != nil {
-        if err := rows.Scan(properties...); err != nil {
-            return err
+        if err = rows.Scan(properties...); err != nil {
+            return
         }
     } else if row != nil {
-        if err := row.Scan(properties...); err != nil {
-            return err
+        if err = row.Scan(properties...); err != nil {
+            return
         }
     } else {
         return errors.New("did not provide rows or row to scan from")
@@ -78,8 +78,22 @@ func (f *FoobarModel)ScanFromRowsOrRow(rows *sql.Rows, row *sql.Row) error {
     if err := assignArrayPropertyFromString(f, "SomeArrProp", arrStr); err != nil {
         return err
     }
+    
+    // // We perform the same function many times- so instead of checking the err every time, 
+    // // we can do this wrapping to stop execution if any of them throw an error
+    // // From: https://stackoverflow.com/questions/15397419/go-handling-multiple-errors-elegantly
+    // assignPropWrapper := func(propStr string, valStr string) bool {
+    //     err = assignArrayPropertyFromString(f, propStr, valStr)
+    //     return err == nil
+    // }
 
-    return nil
+    // assignPropWrapper("PoolIds", poolIds) &&
+    //     assignPropWrapper("IntervalIds", intervalIds) &&
+    //     assignPropWrapper("MetricIds", metricIds) &&
+    //     assignPropWrapper("StratIds", stratIds) &&
+    //     assignPropWrapper("SingleDates", singleDates)
+
+    return
 }
 
 // TODO
