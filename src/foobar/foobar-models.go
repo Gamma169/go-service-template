@@ -75,23 +75,24 @@ func (f *FoobarModel)ScanFromRowsOrRow(rows *sql.Rows, row *sql.Row) (err error)
         f.SomeNullableProp = &nullableStr.String
     }
 
-    if err := assignArrayPropertyFromString(f, "SomeArrProp", arrStr); err != nil {
-        return err
-    }
+    err = assignArrayPropertyFromString(f, "SomeArrProp", arrStr)
     
-    // // We perform the same function many times- so instead of checking the err every time, 
-    // // we can do this wrapping to stop execution if any of them throw an error
-    // // From: https://stackoverflow.com/questions/15397419/go-handling-multiple-errors-elegantly
+    // We perform the same function many times- so instead of checking the err every time, 
+    // we can do this wrapping to stop execution if any of them throw an error
+    // From: https://stackoverflow.com/questions/15397419/go-handling-multiple-errors-elegantly
     // assignPropWrapper := func(propStr string, valStr string) bool {
     //     err = assignArrayPropertyFromString(f, propStr, valStr)
     //     return err == nil
     // }
 
-    // assignPropWrapper("PoolIds", poolIds) &&
+    // // need to wrap in an anonymous no-op func because otherwise I get value is 'evaluated but not used'
+    // func(b bool) {} (
+    //     assignPropWrapper("PoolIds", poolIds) &&
     //     assignPropWrapper("IntervalIds", intervalIds) &&
     //     assignPropWrapper("MetricIds", metricIds) &&
     //     assignPropWrapper("StratIds", stratIds) &&
-    //     assignPropWrapper("SingleDates", singleDates)
+    //     assignPropWrapper("SingleDates", singleDates),
+    // )
 
     return
 }

@@ -77,7 +77,7 @@ describe('foobar Model Tests:', function() {
             .then(function(resp) {
               
               const returnedModels = resp.body;
-              chai.assert.equal(modelsForId.length, returnedModels.length, "returns same number of models as in testcases");
+              chai.assert.equal(returnedModels.length, modelsForId.length, "returns same number of models as in testcases");
               modelsForId.forEach(mockModel => {
                 const returnedModel = returnedModels.find(retModel => retModel.id === mockModel.id);
 
@@ -112,7 +112,7 @@ describe('foobar Model Tests:', function() {
           .then(function(resp) {
             
             const returnedModels = resp.body;
-            chai.assert.equal(modelsForId.length, returnedModels.data.length, "returns same number of models as in testcases");
+            chai.assert.equal(returnedModels.data.length, modelsForId.length, "returns same number of models as in testcases");
             modelsForId.forEach(mockModel => {
               const returnedModel = returnedModels.data.find(retModel => retModel.id === mockModel.id);
 
