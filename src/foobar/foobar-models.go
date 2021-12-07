@@ -191,17 +191,15 @@ func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
     acceptHeader := r.Header.Get(AcceptContentTypeHeader)
     if header == jsonapi.MediaType || acceptHeader == jsonapi.MediaType {
         w.Header().Set(ContentTypeHeader, jsonapi.MediaType)
-        if err = jsonapi.MarshalPayload(w, foobarModels); err != nil {
-            return
-        }
+        err = jsonapi.MarshalPayload(w, foobarModels)  // don't need to wrap in if/return stmt b/c this is last stmt in func
     } else {
         w.Header().Set(ContentTypeHeader, JSONContentType)
-        if err = json.NewEncoder(w).Encode(foobarModels); err != nil {
-            return
-        }
+        err = json.NewEncoder(w).Encode(foobarModels)  // don't need to wrap in if/return stmt b/c this is last stmt in func
     }
 
-    debugLog("Found Models ≡(*′▽`)っ!")
+    if err == nil {
+        debugLog("Found Models ≡(*′▽`)っ!")
+    }
 }
 
 
