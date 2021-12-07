@@ -31,8 +31,7 @@ type FoobarModel struct {
     // SubModels         []*SubModel  `jsonapi:"relation,sub-models"`
 }
 
-func (f *FoobarModel)Validate() error {
-    var err error
+func (f *FoobarModel)Validate() (err error) {
 
     if strings.TrimSpace(f.Name) == "" {
         err = errors.New("Cannot have empty name")
@@ -40,7 +39,7 @@ func (f *FoobarModel)Validate() error {
         err = errors.New("SomeProp cannot equal 'bad prop'")
     } 
 
-    return err
+    return
 }
 
 func (f *FoobarModel)ScanFromRowsOrRow(rows *sql.Rows, row *sql.Row) (err error) {
