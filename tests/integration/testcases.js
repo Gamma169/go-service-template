@@ -1,6 +1,7 @@
 // Configured in main.go
 const DEFAULT_PORT = 7890;
 const DB_ARR_DELIMITER = ':::';
+const REQUESTER_ID_HEADER = 'user-id';
 
 function getPort() {    
   let portNum = process.env.FOOBAR_PORT || DEFAULT_PORT;
@@ -67,6 +68,7 @@ const dbTeardownQuery = `DELETE FROM foobar_models;`;
 
 module.exports = {
   SERVICE_URL,
+  REQUESTER_ID_HEADER,
   USER_IDS,
   MOCK_MODELS,
   arrayToStr,

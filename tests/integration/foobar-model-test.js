@@ -9,6 +9,7 @@ require('./health-check-test');
 
 const {
   SERVICE_URL,
+  REQUESTER_ID_HEADER,
   USER_IDS,
   MOCK_MODELS,
   // arrayToStr,
@@ -73,7 +74,7 @@ describe('foobar Model Tests:', function() {
         it('should be able to get json models for the user: ' + id, function(done) {
           chai.request(SERVICE_URL)
             .get('/user/foobar-models')
-            .set('user-id', id)
+            .set(REQUESTER_ID_HEADER, id)
             .then(function(resp) {
               
               const returnedModels = resp.body;
@@ -107,7 +108,7 @@ describe('foobar Model Tests:', function() {
         it('should be able to get jsonapi models for the user:' + id, function(done) {
           chai.request(SERVICE_URL)
           .get('/user/foobar-models')
-          .set('user-id', id)
+          .set(REQUESTER_ID_HEADER, id)
           .set('Accept', 'application/vnd.api+json')
           .then(function(resp) {
             
@@ -156,6 +157,44 @@ describe('foobar Model Tests:', function() {
 
 
     describe('Delete Model Tests', function() {
+      const modelToDelete = MOCK_MODELS[0];
+
+      it('should be able to delete a model that belongs to the requester', function(done) {
+        chai.request(SERVICE_URL)
+          .delete('/user/foobar-models/'+ modelToDelete.id)
+          .set(REQUESTER_ID_HEADER, modelToDelete.user_id)
+          .then(function() {
+            testsPGClient.query(`SELECT id FROM foobar_models`)
+              .then(function(resp){
+                chai.assert.ok(resp.rows);
+                chai.assert.equal(MOCK_MODELS.length-1, resp.rows.length);
+                const nonDeletedModelIds = MOCK_MODELS.filter(model => model.id !== modelToDelete.id).map(m => m.id);
+                const returnedIds = resp.rows.map(m => m.id);
+                chai.assert.sameMembers(nonDeletedModelIds, returnedIds);
+                done();
+              })
+              .catch(done);
+          }, done)
+          .catch(done);
+      });
+
+      it('should NOT delete an analytics file that does not belong to the owner', function(done) {
+        const modelOwnerId = modelToDelete.user_id;
+        const badClientId = USER_IDS.filter(id => id !== modelOwnerId)[0];
+        chai.request(SERVICE_URL)
+          .delete('/user/foobar-models/'+ modelToDelete.id)
+          .set(REQUESTER_ID_HEADER, badClientId)
+          .then(function() {
+            testsPGClient.query(`SELECT id FROM foobar_models`)
+              .then(function(resp){
+                chai.assert.ok(resp.rows);
+                chai.assert.equal(MOCK_MODELS.length, resp.rows.length);
+                done();
+              })
+              .catch(done);
+          }, done)
+          .catch(done);
+      });
     });
 
 

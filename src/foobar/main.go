@@ -109,11 +109,11 @@ func main() {
     router.Use(loggingMiddleware)
 
 
-
-
     s := router.PathPrefix("/user").Subrouter()
     s.Use(RequesterIdHeaderMiddleware)
     s.Path("/foobar-models").Methods(http.MethodGet).HandlerFunc(GetFoobarModelHandler)
+    s.Path("/foobar-models/{modelId}").Methods(http.MethodDelete).HandlerFunc(DeleteFoobarModelHandler)
+    
     // s.Path("/").Methods("GET").HandlerFunc(GetUserHandler)
 
     

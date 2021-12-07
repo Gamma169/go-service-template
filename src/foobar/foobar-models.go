@@ -6,7 +6,7 @@ import (
     "errors"
     // "fmt"
     // "github.com/google/uuid"
-    // "github.com/gorilla/mux"
+    "github.com/gorilla/mux"
     "github.com/google/jsonapi"
     "net/http"
     "strings"
@@ -86,11 +86,9 @@ func (f *FoobarModel)ScanFromRowsOrRow(rows *sql.Rows, row *sql.Row) (err error)
 
     // // need to wrap in an anonymous no-op func because otherwise I get value is 'evaluated but not used'
     // func(b bool) {} (
-    //     assignPropWrapper("PoolIds", poolIds) &&
-    //     assignPropWrapper("IntervalIds", intervalIds) &&
-    //     assignPropWrapper("MetricIds", metricIds) &&
-    //     assignPropWrapper("StratIds", stratIds) &&
-    //     assignPropWrapper("SingleDates", singleDates),
+    //     assignPropWrapper("p1", p1s) &&
+    //     assignPropWrapper("p2", p2s) &&
+    //     assignPropWrapper("p3", p3s),
     // )
 
     return
@@ -154,7 +152,7 @@ func initFoobarModelsPreparedStatements() {
     `)
 
     deleteFoobarStmt, err = DB.Prepare(`
-        DELETE FROM foobar_models WHERE id = ($1);
+        DELETE FROM foobar_models WHERE id = ($1) AND user_id = ($2);
     `)
 
 // TODO
@@ -172,18 +170,16 @@ func initFoobarModelsPreparedStatements() {
 func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
     debugLog("Received request to get models for requester")
     var err error
-    var errStatus = http.StatusInternalServerError
 
     // We have to invoke an anonymous function function here because if we just call sendErrorOnError directly
     // then we pass in 'err' as it is first initialized-- nil.  And we lose error handling
     // By wrapping in the anonymous function, err gets passed in with its value at the end of the call as we expect.
-    defer func() {sendErrorOnError(err, errStatus, w, r)}()
+    defer func() {sendErrorOnError(err, http.StatusInternalServerError, w, r)}()
 
-    // Should exist and be valid because of middleware
-    requesterId := r.Header.Get(REQUESTER_ID_HEADER)
+    requesterId := r.Header.Get(REQUESTER_ID_HEADER)  // Should exist and be valid because of middleware
 
     var foobarModels []*FoobarModel
-    if foobarModels, err, errStatus = getModelsForRequester(requesterId); err != nil {
+    if foobarModels, err = getModelsForRequester(requesterId); err != nil {
         return
     }
 
@@ -203,14 +199,32 @@ func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
+
+func DeleteFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
+    debugLog("Received request to delete model")
+
+    vars := mux.Vars(r)
+    id := vars["modelId"]
+    requesterId := r.Header.Get(REQUESTER_ID_HEADER)  // Should exist and be valid because of middleware
+    if err := deleteModelForRequester(id, requesterId); err != nil {
+        debugLog(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusNoContent)   
+    debugLog("Deleted analytics file! ٩(˘◡˘)۶")
+}
+
+
 /*********************************************
  * Database Functions
  * *******************************************/
 
-func getModelsForRequester(requesterId string) ([]*FoobarModel, error, int) {
+func getModelsForRequester(requesterId string) ([]*FoobarModel, error) {
     fbRows, err := getFoobarModelsStmt.Query(requesterId)
     if err != nil {
-        return nil, err, http.StatusInternalServerError
+        return nil, err
     }
     defer fbRows.Close()
 
@@ -220,14 +234,23 @@ func getModelsForRequester(requesterId string) ([]*FoobarModel, error, int) {
         model := FoobarModel{}
 
         if err = model.ScanFromRowsOrRow(fbRows, nil); err != nil {
-            return nil, err, http.StatusInternalServerError
+            return nil, err
         }
         
         foobarModels = append(foobarModels, &model)
     }
 
 
-    return foobarModels, nil, 0
+    return foobarModels, nil
 }
 
 
+func deleteModelForRequester(fileId string, requesterId string) (err error) {
+    // NOTE: the other return value is an *sql.Result struct
+    // We can possibly check if we actually deleted a file using result.RowsAffected() == 1,
+    // and throw an error if == 0 (meaning we tried to delete a file that didn't exist or didn't belong to requester)
+    // But I think that is unnecessary for now.  Just wanted to log possibility for posterity
+    // https://pkg.go.dev/database/sql#Result
+    _, err = deleteFoobarStmt.Exec(fileId, requesterId)
+    return
+}
