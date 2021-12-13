@@ -12,7 +12,7 @@ You should do this immediately after copying the service.  Rename the service to
 ## Rename all instances of foobar in the code
 `find ./ -type f -not -path "./.git/*" -not -path "*/node_modules/*" -exec sed -i 's/foobar/<lowercase_service_name>/g' {} \;`
 
-`find ./ -type f -not -path "./.git/*" -not -path "*/node_modules/*" -exec sed -i 's/FOOBAR/<UPPERCSE_SERVICE_NAME>/g' {} \;`
+`find ./ -type f -not -path "./.git/*" -not -path "*/node_modules/*" -exec sed -i 's/FOOBAR/<UPPERCASE_SERVICE_NAME>/g' {} \;`
 
 taken from
 https://stackoverflow.com/questions/11392478/how-to-replace-a-string-in-multiple-files-in-linux-command-line
