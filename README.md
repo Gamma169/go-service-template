@@ -23,5 +23,5 @@ You also need to rename files and directories.  You can find all the files/direc
 
 `find . -iname "*foobar*"`
 
-**TODO:** For now need to rename them manually.  Might look into a command like the above to do all of them
-
+- Rename directories with: `find . -type d -iname '*foobar*' | xargs -I '{}' mv {} $(echo '{}' | sed 's/foobar/<service_name>/g')`
+- Rename files with:
