@@ -42,7 +42,7 @@ func (f *FoobarModel)Validate() (err error) {
     return
 }
 
-func (f *FoobarModel)ScanFromRowsOrRow(rows *sql.Rows, row *sql.Row) (err error) {
+func (f *FoobarModel)ScanFromRowsOrRow(rowsOrRow interface{Scan(dest ...interface{}) error}) (err error) {
     // Define any vars that don't fit in the model
     var (
         nullableStr sql.NullString
@@ -57,16 +57,8 @@ func (f *FoobarModel)ScanFromRowsOrRow(rows *sql.Rows, row *sql.Row) (err error)
         &f.DateCreated, &f.LastUpdated,
     }
 
-    if rows != nil {
-        if err = rows.Scan(properties...); err != nil {
-            return
-        }
-    } else if row != nil {
-        if err = row.Scan(properties...); err != nil {
-            return
-        }
-    } else {
-        return errors.New("did not provide rows or row to scan from")
+    if err = rowsOrRow.Scan(properties...); err != nil {
+        return
     }
     
     // Postprocess + assign the vars above
@@ -233,7 +225,7 @@ func getModelsForRequester(requesterId string) ([]*FoobarModel, error) {
     for fbRows.Next() {
         model := FoobarModel{}
 
-        if err = model.ScanFromRowsOrRow(fbRows, nil); err != nil {
+        if err = model.ScanFromRowsOrRow(fbRows); err != nil {
             return nil, err
         }
         
