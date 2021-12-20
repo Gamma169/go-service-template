@@ -3,9 +3,9 @@ package main
 import (
     "errors"
 
-    "github.com/mattes/migrate"
-    "github.com/mattes/migrate/database/postgres"
-    _ "github.com/mattes/migrate/source/file"
+    "github.com/golang-migrate/migrate/v4"
+    "github.com/golang-migrate/migrate/v4/database/postgres"
+    _ "github.com/golang-migrate/migrate/v4/source/file"
 
     "math/rand"
     "time"

@@ -7,6 +7,7 @@ import (
     _ "github.com/lib/pq"
     "reflect"
     "strings"
+    "time"
 )
 
 
@@ -34,10 +35,17 @@ func initDB() {
         panic(err)
     }
 
-    if err = DB.Ping(); err != nil {
-        logError(errors.New("Error: Could not connect to DB"), nil)
-        logError(err, nil)
-        panic(err)
+    for tries := 0; tries == 0 || err != nil; tries++ {
+        err = DB.Ping()
+            
+        if err != nil {
+            if tries > 2 {
+                logError(errors.New("Error: Could not connect to DB"), nil)
+                panic(err)
+            }
+            debugLog("Error: Could not connect to DB -- trying again in 3 seconds")
+            time.Sleep(time.Duration(3)*time.Second)
+        }
     }
     debugLog("Connection sucessfully established")    
 }
