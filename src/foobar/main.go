@@ -165,8 +165,9 @@ func main() {
     // Doesn't block if no connections, but will otherwise wait
     // until the timeout deadline.
     server.Shutdown(ctx)
-    shutdown()
     debugLog("Shutting down")
+    shutdown()
+    log.Println("Completed shutdown sequence.  Thank you and goodnight.  <(_ _)>")
     os.Exit(0)
 }
 
