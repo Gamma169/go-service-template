@@ -58,14 +58,14 @@ describe('foobar Model Tests:', function() {
         .catch(done);
     });
 
-    // afterEach('Teardown Database', function(done) {
-    //   testsPGClient
-    //     .query(dbTeardownQuery)
-    //     .then(function() {
-    //       done();
-    //     })
-    //     .catch(done);
-    // });
+    afterEach('Teardown Database', function(done) {
+      testsPGClient
+        .query(dbTeardownQuery)
+        .then(function() {
+          done();
+        })
+        .catch(done);
+    });
 
     describe('Get Model Tests', function() {
       
@@ -79,7 +79,6 @@ describe('foobar Model Tests:', function() {
             .then(function(resp) {
               
               const returnedModels = resp.body;
-              console.log(resp.body);
               chai.assert.equal(returnedModels.length, modelsForId.length, "returns same number of models as in testcases");
               modelsForId.forEach(mockModel => {
                 const returnedModel = returnedModels.find(retModel => retModel.id === mockModel.id);
@@ -151,10 +150,51 @@ describe('foobar Model Tests:', function() {
 
 
     describe('Post Model Tests', function() {
+      
+      it('should be able to add new model to the database with json', function(done) {
+        const input = {
+          id: '86888b5e-5934-49bb-9e79-7eb9ba792a9e',
+          name: 'some post model',
+          age: 44,
+          someProp: 'qweqweqwe',
+          someNullableProp: null,
+          someArrProp:['zxc','sdf','xcv', 'popop'],
+        };
+
+        chai.request(SERVICE_URL)
+          .post('/user/foobar-models')
+          .set('user-id', USER_IDS[1])
+          .set('Content-Type', 'application/json')
+          .send(input)
+          .then(function(serverResp) {
+            const newModel = serverResp.body;
+            const newModelId = newModel.id;
+            // TODO: check newModel
+
+
+            
+            testsPGClient.query(`SELECT id FROM foobar_models WHERE id = '${newModelId}'`)
+              .then(function(pgResp){
+                chai.assert.equal(1, pgResp.rows.length);
+                // TODO: finish
+
+                done();
+              })
+              .catch(done);
+          }, done)
+          .catch(done);
+      });
+
+      // TODO
+      it.skip('should be able to add a new model to the database with jsonAPI', function(done) {
+        done();
+      });
+
     });
 
 
     describe('Update Model Tests', function() {
+      // TODO
     });
 
 

@@ -55,20 +55,17 @@ func sendErrorOnError(err error, status int, w http.ResponseWriter, r *http.Requ
 }
 
 
-func WriteModelToResponse(dataToSend interface{}, w *http.ResponseWriter, r *http.Request) error {
+func WriteModelToResponse(dataToSend interface{}, w http.ResponseWriter, r *http.Request) error {
     
-    debugLog(dataToSend)
-
-
-    (*w).WriteHeader(http.StatusOK)
+    // NOTE: If you w.WriteHeader, make sure to do it after the assignment of content-type headers
+    // OR else you will have problems
     header := r.Header.Get(ContentTypeHeader)
     acceptHeader := r.Header.Get(AcceptContentTypeHeader)
     if header == jsonapi.MediaType || acceptHeader == jsonapi.MediaType {
-        (*w).Header().Set(ContentTypeHeader, jsonapi.MediaType)
-        return jsonapi.MarshalPayload(*w, dataToSend)
+        w.Header().Set(ContentTypeHeader, jsonapi.MediaType)
+        return jsonapi.MarshalPayload(w, dataToSend)
     }
     
-    (*w).Header().Set(ContentTypeHeader, JSONContentType)
-    return json.NewEncoder(*w).Encode(dataToSend)
-    return nil
+    w.Header().Set(ContentTypeHeader, JSONContentType)
+    return json.NewEncoder(w).Encode(dataToSend)
 }

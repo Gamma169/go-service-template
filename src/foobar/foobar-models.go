@@ -76,12 +76,12 @@ func (f *FoobarModel)ScanFromRowsOrRow(rowsOrRow interface{Scan(dest ...interfac
     //     return err == nil
     // }
 
-    // // need to wrap in an anonymous no-op func because otherwise I get value is 'evaluated but not used'
-    // func(b bool) {} (
-    //     assignPropWrapper("p1", p1s) &&
-    //     assignPropWrapper("p2", p2s) &&
-    //     assignPropWrapper("p3", p3s),
-    // )
+    // need to assign to an _ because otherwise I get value is 'evaluated but not used' from compiler
+    // _ = assignPropWrapper("PoolIds", poolIds) &&
+    // assignPropWrapper("IntervalIds", intervalIds) &&
+    // assignPropWrapper("MetricIds", metricIds) &&
+    // assignPropWrapper("StratIds", stratIds) &&
+    // assignPropWrapper("SingleDates", singleDates)
 
     return
 }
@@ -195,8 +195,7 @@ func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    debugLog(foobarModels)
-    if err = WriteModelToResponse(foobarModels, &w, r); err == nil {
+    if err = WriteModelToResponse(foobarModels, w, r); err == nil {
         debugLog("Found Models ≡(*′▽`)っ!")
     }
 }
@@ -233,7 +232,7 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    if err = WriteModelToResponse(model, &w, r); err == nil {
+    if err = WriteModelToResponse(model, w, r); err == nil {
         debugLog("Created or Updated Model!")
     }
 }
