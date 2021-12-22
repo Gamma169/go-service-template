@@ -77,11 +77,9 @@ func (f *FoobarModel)ScanFromRowsOrRow(rowsOrRow interface{Scan(dest ...interfac
     // }
 
     // need to assign to an _ because otherwise I get value is 'evaluated but not used' from compiler
-    // _ = assignPropWrapper("PoolIds", poolIds) &&
-    // assignPropWrapper("IntervalIds", intervalIds) &&
-    // assignPropWrapper("MetricIds", metricIds) &&
-    // assignPropWrapper("StratIds", stratIds) &&
-    // assignPropWrapper("SingleDates", singleDates)
+    // _ = assignPropWrapper("p1", p1s) &&
+    // assignPropWrapper("p2", p2s) &&
+    // assignPropWrapper("p3", p3s)
 
     return
 }
