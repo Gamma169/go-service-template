@@ -151,9 +151,8 @@ describe('foobar Model Tests:', function() {
 
     describe('Post Model Tests', function() {
       
-      it('should be able to add new model to the database with json', function(done) {
+      it('should be able to add new model WITHOUT id to the database using json', function(done) {
         const input = {
-          id: '86888b5e-5934-49bb-9e79-7eb9ba792a9e',
           name: 'some post model',
           age: 44,
           someProp: 'qweqweqwe',
@@ -186,7 +185,15 @@ describe('foobar Model Tests:', function() {
       });
 
       // TODO
-      it.skip('should be able to add a new model to the database with jsonAPI', function(done) {
+      it('should be able to add new model WITHOUT id to the database using jsonAPI', function(done) {
+        done();
+      });
+
+      it('should be able to add new model WITH id to the database using jsonAPI', function(done) {
+        done();
+      });
+
+      it('should be able to add new model WITH id to the database using jsonAPI', function(done) {
         done();
       });
 
