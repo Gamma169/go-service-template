@@ -16,10 +16,9 @@ import (
     "time"
 )
 
-// docker run -d --name=foobar_post -e POSTGRES_HOST_AUTH_METHOD=trust --net=host postgres
-// docker exec -it foobar_post psql -h localhost -U postgres -p 5432 -c 'CREATE DATABASE foo;'
+// docker run -d --name=foobar_post -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=foo -p 5432:5432 postgres:9.6.17-alpine
 
-// DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 ./bin/foobar
+// DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 RUN_MIGRATIONS=true ./bin/foobar
 
 // Or
 // ./scripts/setup_database
@@ -63,7 +62,11 @@ func init() {
     checkRequiredEnvs()
     initDebug()
     initDB()
-    initMigrations()
+    
+    if getOptionalEnv("RUN_MIGRATIONS", "false") == "true" {
+        initMigrations()
+    }
+
     initFoobarModelsPreparedStatements()
 }
 
@@ -112,6 +115,8 @@ func main() {
     s := router.PathPrefix("/user").Subrouter()
     s.Use(RequesterIdHeaderMiddleware)
     s.Path("/foobar-models").Methods(http.MethodGet).HandlerFunc(GetFoobarModelHandler)
+    s.Path("/foobar-models").Methods(http.MethodPost).HandlerFunc(CreateOrUpdateFoobarModelHandler)
+    s.Path("/foobar-models/{modelId}").Methods(http.MethodPatch).HandlerFunc(CreateOrUpdateFoobarModelHandler)
     s.Path("/foobar-models/{modelId}").Methods(http.MethodDelete).HandlerFunc(DeleteFoobarModelHandler)
     
     // s.Path("/").Methods("GET").HandlerFunc(GetUserHandler)

@@ -53,3 +53,18 @@ func sendErrorOnError(err error, status int, w http.ResponseWriter, r *http.Requ
         http.Error(w, err.Error(), status)
     }
 }
+
+
+func WriteModelToResponse(dataToSend interface{}, w *http.ResponseWriter, r *http.Request) error {
+    
+    w.WriteHeader(http.StatusOK)
+    header := r.Header.Get(ContentTypeHeader)
+    acceptHeader := r.Header.Get(AcceptContentTypeHeader)
+    if header == jsonapi.MediaType || acceptHeader == jsonapi.MediaType {
+        w.Header().Set(ContentTypeHeader, jsonapi.MediaType)
+        return jsonapi.MarshalPayload(w, dataToSend)
+    }
+    
+    w.Header().Set(ContentTypeHeader, JSONContentType)
+    return json.NewEncoder(w).Encode(dataToSend)
+}

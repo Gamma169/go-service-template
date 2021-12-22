@@ -37,7 +37,9 @@ func (f *FoobarModel)Validate() (err error) {
         err = errors.New("Cannot have empty name")
     } else if f.SomeProp == "bad prop" {
         err = errors.New("SomeProp cannot equal 'bad prop'")
-    } 
+    } else {
+        err = checkStructFieldsForInjection(*f)
+    }
 
     return
 }
@@ -94,6 +96,24 @@ func (f *FoobarModel)ScanFromRowsOrRow(rows *sql.Rows, row *sql.Row) (err error)
     return
 }
 
+func (f *FoobarModel)ConvertToDatabaseInput(requesterId string) []interface{} {
+    f.LastUpdated = time.Now()
+    return []interface{}{
+        f.Name,
+        f.Age,
+        f.SomeProp,
+        f.SomeNullableProp,
+        strings.Join(f.SomeArrProp, DB_ARRAY_DELIMITER),
+
+        f.DateCreated,
+        f.LastUpdated,
+
+        f.Id,
+        requesterId,
+    }
+}
+
+
 // TODO
 // type SubModel struct {
 //     Id             string     `jsonapi:"primary,stress-test-cohorts"`
@@ -131,9 +151,9 @@ func initFoobarModelsPreparedStatements() {
 
     postFoobarModelStmt, err = DB.Prepare(`
         INSERT INTO foobar_models (
-            id, user_id, 
             name, age, some_prop, some_nullable_prop, some_arr_prop,
-            date_created, last_updated
+            date_created, last_updated,
+            id, user_id
         )
         VALUES (($1), ($2), ($3), ($4), ($5), ($6), ($7), ($8), ($9))
     `)
@@ -141,14 +161,16 @@ func initFoobarModelsPreparedStatements() {
 
     updateFoobarStmt, err = DB.Prepare(`
         UPDATE foobar_models
-        SET user_id = ($1),
-            name = ($2),
-            age = ($3),
-            some_prop = ($4),
-            some_nullable_prop = ($5)
-            some_arr_prop = ($6)
+        SET name = ($1),
+            age = ($2),
+            some_prop = ($3),
+            some_nullable_prop = ($4),
+            some_arr_prop = ($5),
+            date_created = ($6),
+            last_updated = ($7)
         WHERE
-            id = ($7);
+            id = ($8) AND
+            user_id = ($9);
     `)
 
     deleteFoobarStmt, err = DB.Prepare(`
@@ -199,6 +221,42 @@ func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
+func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
+    debugLog("Got Request To Create Or Update Model")
+    var err error
+    var errStatus = http.StatusInternalServerError
+
+    defer func() {sendErrorOnError(err, errStatus, w, r)}()
+
+    var model FoobarModel
+    r.Body = http.MaxBytesReader(w, r.Body, 32768)  // Blocks the read of anything larger than ~32000 bytes
+    if err, errStatus = PreProcessInput(&file, r); err != nil {
+        return
+    }
+    
+    clientId := r.Header.Get(REQUESTER_ID_HEADER)  // Should exist and be valid because of middleware
+    if r.Method == http.MethodPost {
+        if  file.Id == ZERO_UUID || strings.TrimSpace(file.Id) == "" {
+            file.Id = uuid.New().String()
+        }
+        file.DateCreated = time.Now()
+        if err = postAnayticsFileToDatabase(&file, clientId, false); err != nil {
+            return
+        }
+    } else if r.Method == http.MethodPatch {
+        if err = postAnayticsFileToDatabase(&file, clientId, true); err != nil {
+            return
+        }
+    } else {
+        err = errors.New("Somehow calling create/update handler with not POST or PATCH request")
+        return
+    }
+
+    if err = WriteModelToResponse(model, &w, r); err == nil {
+        debugLog("Created or Updated Model!")
+    }
+}
+
 
 func DeleteFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
     debugLog("Received request to delete model")
@@ -212,8 +270,8 @@ func DeleteFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    w.WriteHeader(http.StatusNoContent)   
-    debugLog("Deleted analytics file! ٩(˘◡˘)۶")
+    w.WriteHeader(http.StatusNoContent)
+    debugLog("Deleted Model! ٩(˘◡˘)۶")
 }
 
 
