@@ -58,14 +58,14 @@ describe('foobar Model Tests:', function() {
         .catch(done);
     });
 
-    afterEach('Teardown Database', function(done) {
-      testsPGClient
-        .query(dbTeardownQuery)
-        .then(function() {
-          done();
-        })
-        .catch(done);
-    });
+    // afterEach('Teardown Database', function(done) {
+    //   testsPGClient
+    //     .query(dbTeardownQuery)
+    //     .then(function() {
+    //       done();
+    //     })
+    //     .catch(done);
+    // });
 
     describe('Get Model Tests', function() {
       
@@ -79,6 +79,7 @@ describe('foobar Model Tests:', function() {
             .then(function(resp) {
               
               const returnedModels = resp.body;
+              console.log(resp.body);
               chai.assert.equal(returnedModels.length, modelsForId.length, "returns same number of models as in testcases");
               modelsForId.forEach(mockModel => {
                 const returnedModel = returnedModels.find(retModel => retModel.id === mockModel.id);

@@ -2,12 +2,10 @@ package main
 
 import (
     "database/sql"
-    "encoding/json"
     "errors"
     // "fmt"
-    // "github.com/google/uuid"
+    "github.com/google/uuid"
     "github.com/gorilla/mux"
-    "github.com/google/jsonapi"
     "net/http"
     "strings"
     "time"
@@ -197,17 +195,8 @@ func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    header := r.Header.Get(ContentTypeHeader)
-    acceptHeader := r.Header.Get(AcceptContentTypeHeader)
-    if header == jsonapi.MediaType || acceptHeader == jsonapi.MediaType {
-        w.Header().Set(ContentTypeHeader, jsonapi.MediaType)
-        err = jsonapi.MarshalPayload(w, foobarModels)  // don't need to wrap in if/return stmt b/c this is last stmt in func
-    } else {
-        w.Header().Set(ContentTypeHeader, JSONContentType)
-        err = json.NewEncoder(w).Encode(foobarModels)  // don't need to wrap in if/return stmt b/c this is last stmt in func
-    }
-
-    if err == nil {
+    debugLog(foobarModels)
+    if err = WriteModelToResponse(foobarModels, &w, r); err == nil {
         debugLog("Found Models ≡(*′▽`)っ!")
     }
 }
@@ -222,21 +211,21 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 
     var model FoobarModel
     r.Body = http.MaxBytesReader(w, r.Body, 32768)  // Blocks the read of anything larger than ~32000 bytes
-    if err, errStatus = PreProcessInput(&file, r); err != nil {
+    if err, errStatus = PreProcessInput(&model, r); err != nil {
         return
     }
     
-    clientId := r.Header.Get(REQUESTER_ID_HEADER)  // Should exist and be valid because of middleware
+    requesterId := r.Header.Get(REQUESTER_ID_HEADER)  // Should exist and be valid because of middleware
     if r.Method == http.MethodPost {
-        if  file.Id == ZERO_UUID || strings.TrimSpace(file.Id) == "" {
-            file.Id = uuid.New().String()
+        if  model.Id == ZERO_UUID || strings.TrimSpace(model.Id) == "" {
+            model.Id = uuid.New().String()
         }
-        file.DateCreated = time.Now()
-        if err = postAnayticsFileToDatabase(&file, clientId, false); err != nil {
+        model.DateCreated = time.Now()
+        if err = postModelToDatabase(&model, requesterId, false); err != nil {
             return
         }
     } else if r.Method == http.MethodPatch {
-        if err = postAnayticsFileToDatabase(&file, clientId, true); err != nil {
+        if err = postModelToDatabase(&model, requesterId, true); err != nil {
             return
         }
     } else {
@@ -290,9 +279,26 @@ func getModelsForRequester(requesterId string) ([]*FoobarModel, error) {
         foobarModels = append(foobarModels, &model)
     }
 
-
     return foobarModels, nil
 }
+
+
+func postModelToDatabase(model *FoobarModel, requesterId string, update bool) error {
+    dbInput := model.ConvertToDatabaseInput(requesterId)
+
+    if update {
+        if _, err := updateFoobarStmt.Exec(dbInput...); err != nil {
+            return err
+        }
+    } else {
+        if _, err := postFoobarModelStmt.Exec(dbInput...); err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
 
 
 func deleteModelForRequester(fileId string, requesterId string) (err error) {
