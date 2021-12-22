@@ -18,7 +18,8 @@ import (
 
 // docker run -d --name=foobar_post -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=foo -p 5432:5432 postgres:9.6.17-alpine
 
-// DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 RUN_MIGRATIONS=true ./bin/foobar
+// ./scripts/build foobar && DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 RUN_MIGRATIONS=true ./bin/foobar
+
 
 // Or
 // ./scripts/setup_database
@@ -102,6 +103,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
     router := mux.NewRouter()
+    router.Use(loggingMiddleware)
     
     router.Path("/health").Methods(http.MethodGet).HandlerFunc(HealthHandler)
 
@@ -109,7 +111,6 @@ func main() {
         AddCORSMiddlewareAndEndpoint(router)
     }
 
-    router.Use(loggingMiddleware)
 
 
     s := router.PathPrefix("/user").Subrouter()
@@ -168,8 +169,9 @@ func main() {
     // Doesn't block if no connections, but will otherwise wait
     // until the timeout deadline.
     server.Shutdown(ctx)
-    shutdown()
     debugLog("Shutting down")
+    shutdown()
+    log.Println("Completed shutdown sequence.  Thank you and goodnight.  <(_ _)>")
     os.Exit(0)
 }
 

@@ -33,7 +33,8 @@ describe('foobar Model Tests:', function() {
       database: DATABASE_NAME,
       port,
     });
-    testsPGClient.connect().catch(function() {
+    testsPGClient.connect().catch(function(err) {
+      console.error(err)  // eslint-disable-line
       console.error("ERROR: Connection to postgres not established -- Check your docker container and port mappings.  Make sure it's running on port: " + port); // eslint-disable-line
       testsPGClient.end();
       process.exit(1);
