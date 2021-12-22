@@ -150,10 +150,58 @@ describe('foobar Model Tests:', function() {
 
 
     describe('Post Model Tests', function() {
+      
+      it('should be able to add new model WITHOUT id to the database using json', function(done) {
+        const input = {
+          name: 'some post model',
+          age: 44,
+          someProp: 'qweqweqwe',
+          someNullableProp: null,
+          someArrProp:['zxc','sdf','xcv', 'popop'],
+        };
+
+        chai.request(SERVICE_URL)
+          .post('/user/foobar-models')
+          .set('user-id', USER_IDS[1])
+          .set('Content-Type', 'application/json')
+          .send(input)
+          .then(function(serverResp) {
+            const newModel = serverResp.body;
+            const newModelId = newModel.id;
+            // TODO: check newModel
+
+
+            
+            testsPGClient.query(`SELECT id FROM foobar_models WHERE id = '${newModelId}'`)
+              .then(function(pgResp){
+                chai.assert.equal(1, pgResp.rows.length);
+                // TODO: finish
+
+                done();
+              })
+              .catch(done);
+          }, done)
+          .catch(done);
+      });
+
+      // TODO
+      it('should be able to add new model WITHOUT id to the database using jsonAPI', function(done) {
+        done();
+      });
+
+      it('should be able to add new model WITH id to the database using jsonAPI', function(done) {
+        done();
+      });
+
+      it('should be able to add new model WITH id to the database using jsonAPI', function(done) {
+        done();
+      });
+
     });
 
 
     describe('Update Model Tests', function() {
+      // TODO
     });
 
 

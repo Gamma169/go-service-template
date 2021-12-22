@@ -2,12 +2,10 @@ package main
 
 import (
     "database/sql"
-    "encoding/json"
     "errors"
     // "fmt"
-    // "github.com/google/uuid"
+    "github.com/google/uuid"
     "github.com/gorilla/mux"
-    "github.com/google/jsonapi"
     "net/http"
     "strings"
     "time"
@@ -37,7 +35,9 @@ func (f *FoobarModel)Validate() (err error) {
         err = errors.New("Cannot have empty name")
     } else if f.SomeProp == "bad prop" {
         err = errors.New("SomeProp cannot equal 'bad prop'")
-    } 
+    } else {
+        err = checkStructFieldsForInjection(*f)
+    }
 
     return
 }
@@ -76,15 +76,31 @@ func (f *FoobarModel)ScanFromRowsOrRow(rowsOrRow interface{Scan(dest ...interfac
     //     return err == nil
     // }
 
-    // // need to wrap in an anonymous no-op func because otherwise I get value is 'evaluated but not used'
-    // func(b bool) {} (
-    //     assignPropWrapper("p1", p1s) &&
-    //     assignPropWrapper("p2", p2s) &&
-    //     assignPropWrapper("p3", p3s),
-    // )
+    // need to assign to an _ because otherwise I get value is 'evaluated but not used' from compiler
+    // _ = assignPropWrapper("p1", p1s) &&
+    // assignPropWrapper("p2", p2s) &&
+    // assignPropWrapper("p3", p3s)
 
     return
 }
+
+func (f *FoobarModel)ConvertToDatabaseInput(requesterId string) []interface{} {
+    f.LastUpdated = time.Now()
+    return []interface{}{
+        f.Name,
+        f.Age,
+        f.SomeProp,
+        f.SomeNullableProp,
+        strings.Join(f.SomeArrProp, DB_ARRAY_DELIMITER),
+
+        f.DateCreated,
+        f.LastUpdated,
+
+        f.Id,
+        requesterId,
+    }
+}
+
 
 // TODO
 // type SubModel struct {
@@ -123,9 +139,9 @@ func initFoobarModelsPreparedStatements() {
 
     postFoobarModelStmt, err = DB.Prepare(`
         INSERT INTO foobar_models (
-            id, user_id, 
             name, age, some_prop, some_nullable_prop, some_arr_prop,
-            date_created, last_updated
+            date_created, last_updated,
+            id, user_id
         )
         VALUES (($1), ($2), ($3), ($4), ($5), ($6), ($7), ($8), ($9))
     `)
@@ -133,14 +149,16 @@ func initFoobarModelsPreparedStatements() {
 
     updateFoobarStmt, err = DB.Prepare(`
         UPDATE foobar_models
-        SET user_id = ($1),
-            name = ($2),
-            age = ($3),
-            some_prop = ($4),
-            some_nullable_prop = ($5)
-            some_arr_prop = ($6)
+        SET name = ($1),
+            age = ($2),
+            some_prop = ($3),
+            some_nullable_prop = ($4),
+            some_arr_prop = ($5),
+            date_created = ($6),
+            last_updated = ($7)
         WHERE
-            id = ($7);
+            id = ($8) AND
+            user_id = ($9);
     `)
 
     deleteFoobarStmt, err = DB.Prepare(`
@@ -175,21 +193,47 @@ func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    header := r.Header.Get(ContentTypeHeader)
-    acceptHeader := r.Header.Get(AcceptContentTypeHeader)
-    if header == jsonapi.MediaType || acceptHeader == jsonapi.MediaType {
-        w.Header().Set(ContentTypeHeader, jsonapi.MediaType)
-        err = jsonapi.MarshalPayload(w, foobarModels)  // don't need to wrap in if/return stmt b/c this is last stmt in func
-    } else {
-        w.Header().Set(ContentTypeHeader, JSONContentType)
-        err = json.NewEncoder(w).Encode(foobarModels)  // don't need to wrap in if/return stmt b/c this is last stmt in func
-    }
-
-    if err == nil {
+    if err = WriteModelToResponse(foobarModels, w, r); err == nil {
         debugLog("Found Models ≡(*′▽`)っ!")
     }
 }
 
+
+func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
+    debugLog("Got Request To Create Or Update Model")
+    var err error
+    var errStatus = http.StatusInternalServerError
+
+    defer func() {sendErrorOnError(err, errStatus, w, r)}()
+
+    var model FoobarModel
+    r.Body = http.MaxBytesReader(w, r.Body, 32768)  // Blocks the read of anything larger than ~32000 bytes
+    if err, errStatus = PreProcessInput(&model, r); err != nil {
+        return
+    }
+    
+    requesterId := r.Header.Get(REQUESTER_ID_HEADER)  // Should exist and be valid because of middleware
+    if r.Method == http.MethodPost {
+        if  model.Id == ZERO_UUID || strings.TrimSpace(model.Id) == "" {
+            model.Id = uuid.New().String()
+        }
+        model.DateCreated = time.Now()
+        if err = postModelToDatabase(&model, requesterId, false); err != nil {
+            return
+        }
+    } else if r.Method == http.MethodPatch {
+        if err = postModelToDatabase(&model, requesterId, true); err != nil {
+            return
+        }
+    } else {
+        err = errors.New("Somehow calling create/update handler with not POST or PATCH request")
+        return
+    }
+
+    if err = WriteModelToResponse(model, w, r); err == nil {
+        debugLog("Created or Updated Model!")
+    }
+}
 
 
 func DeleteFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
@@ -204,8 +248,8 @@ func DeleteFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    w.WriteHeader(http.StatusNoContent)   
-    debugLog("Deleted analytics file! ٩(˘◡˘)۶")
+    w.WriteHeader(http.StatusNoContent)
+    debugLog("Deleted Model! ٩(˘◡˘)۶")
 }
 
 
@@ -232,9 +276,26 @@ func getModelsForRequester(requesterId string) ([]*FoobarModel, error) {
         foobarModels = append(foobarModels, &model)
     }
 
-
     return foobarModels, nil
 }
+
+
+func postModelToDatabase(model *FoobarModel, requesterId string, update bool) error {
+    dbInput := model.ConvertToDatabaseInput(requesterId)
+
+    if update {
+        if _, err := updateFoobarStmt.Exec(dbInput...); err != nil {
+            return err
+        }
+    } else {
+        if _, err := postFoobarModelStmt.Exec(dbInput...); err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
 
 
 func deleteModelForRequester(fileId string, requesterId string) (err error) {
