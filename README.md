@@ -7,7 +7,7 @@ All instances of this service are named 'foobar' or 'FOOBAR'
 
 # Rename Service
 
-You should do this immediately after copying the service.  Rename the service to your desired value
+You should do this immediately after copying the service.  Rename the service to your desired value. (For example if you wanted to call your service `fourbar`, Substitute `<service_name>` (and variations, i.e., `<lowercase-service_name>`) with `fourbar`). 
 
 ## Rename all instances of foobar in the code
 `find ./ -type f -not -path "./.git/*" -not -path "*/node_modules/*" -exec sed -i 's/foobar/<lowercase_service_name>/g' {} \;`
@@ -25,4 +25,4 @@ You also need to rename files and directories.  You can find all the files/direc
 
 You can rename files and directories with:
 
-````for f in `find . -type d -or -type f -iname '*foobar*'`; do mv $f $(echo $f | sed 's/foobar/<service-name>/g'); done````
+````for f in `find . -type d -or -type f -iname '*foobar*'`; do mv $f $(echo $f | sed 's/foobar/<service_name>/g'); done````
