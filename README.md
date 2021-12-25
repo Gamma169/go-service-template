@@ -23,5 +23,6 @@ You also need to rename files and directories.  You can find all the files/direc
 
 `find . -iname "*foobar*"`
 
-- Rename directories with: `find . -type d -iname '*foobar*' | xargs -I '{}' mv {} $(echo '{}' | sed 's/foobar/<service_name>/g')`
-- Rename files with:
+You can rename files and directories with:
+
+````for f in `find . -type d -or -type f -iname '*foobar*'`; do mv $f $(echo $f | sed 's/foobar/<service-name>/g'); done````
