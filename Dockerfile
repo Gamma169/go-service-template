@@ -1,3 +1,5 @@
+ARG app_name=foobar
+
 FROM golang:1.17-alpine as builder
 
 MAINTAINER rienzi-gokea
@@ -6,7 +8,7 @@ STOPSIGNAL SIGTERM
 
 USER root
 
-ARG app_name=foobar
+ARG app_name
 ARG service_root=/opt/service
 ARG app_root=${service_root}/${app_name}
 
@@ -31,11 +33,11 @@ RUN ./scripts/build ${app_name}
 FROM golang:1.17-alpine as runner
 
 ARG app_name
-ENV app_name ${app_name} 
-ARG service_root
 ARG app_root
 
-WORKDIR $app_root
+ENV app_name ${app_name} 
+
+WORKDIR ${app_root}
 
 COPY --from=builder ${app_root}/bin/${app_name} ${app_root}/bin/${app_name}
 
