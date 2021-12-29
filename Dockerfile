@@ -31,6 +31,8 @@ RUN ./scripts/build ${app_name}
 FROM golang:1.17-alpine as runner
 
 ARG app_name
+# This probably won't build without this command...
+# ENV app_name ${app_name} 
 ARG service_root
 ARG app_root
 
@@ -38,4 +40,4 @@ WORKDIR $app_root
 
 COPY --from=builder ${app_root}/bin/${app_name} ${app_root}/bin/${app_name}
 
-CMD ["./bin/foobar"]
+CMD ["./bin/${app_name}"]
