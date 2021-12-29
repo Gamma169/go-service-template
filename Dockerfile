@@ -1,6 +1,6 @@
 ARG app_name=foobar
 
-FROM golang:1.17-alpine as builder
+FROM golang:1.17-alpine3.15 as builder
 
 MAINTAINER rienzi-gokea
 
@@ -9,13 +9,6 @@ STOPSIGNAL SIGTERM
 USER root
 
 ARG app_name
-ARG service_root=/opt/service
-ARG app_root=${service_root}/${app_name}
-
-RUN if [ ! -d $app_root}/src ]; then mkdir -p $app_root; fi
-
-WORKDIR $app_root
-RUN if [ ! -d src ]; then mkdir src ; fi
 
 COPY ./scripts ./scripts
 COPY ./src ./src
@@ -30,15 +23,12 @@ RUN ./scripts/get_deps
 RUN ./scripts/build ${app_name}
 
 
-FROM golang:1.17-alpine as runner
+FROM alpine:3.15 as runner
 
 ARG app_name
-ARG app_root
-
 ENV app_name ${app_name} 
 
-WORKDIR ${app_root}
+# Note we are following the unix file-system standard by placing our third-party app in the /opt folder
+COPY --from=builder /go/bin/${app_name} /opt/${app_name}
 
-COPY --from=builder ${app_root}/bin/${app_name} ${app_root}/bin/${app_name}
-
-CMD ["./bin/${app_name}"]
+CMD /opt/${app_name}
