@@ -2,12 +2,11 @@
 
 Small template for a go service that includes postgres/redis/proxying/mocha tests
 
-All instances of this service are named 'foobar' or 'FOOBAR'
 
 
 # Rename Service
 
-You should do this immediately after copying the service.  Rename the service to your desired value. For example if you wanted to call your service `fourbar`, substitute `<service_name>` (and variations, i.e., `<lowercase-service_name>`) with `fourbar`. 
+By default, all instances of this service are named 'foobar' or 'FOOBAR'; you should rename this service to your desired service name immediately after copying the service. For example, if you wanted to call your service `fourbar`, substitute `<service_name>` (and variations, i.e., `<lowercase_service_name>`) with `fourbar`. 
 
 ## Rename all instances of foobar in the code
 `find ./ -type f -not -path "./.git/*" -not -path "*/node_modules/*" -exec sed -i 's/foobar/<lowercase_service_name>/g' {} \;`

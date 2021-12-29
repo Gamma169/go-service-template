@@ -1,19 +1,8 @@
-FROM golang:1.17-alpine as builder
-
-MAINTAINER rienzi-gokea
-
-STOPSIGNAL SIGTERM
-
-USER root
-
 ARG app_name=foobar
-ARG service_root=/opt/service
-ARG app_root=${service_root}/${app_name}
 
-RUN if [ ! -d $app_root}/src ]; then mkdir -p $app_root; fi
+FROM golang:1.17-alpine3.15 as builder
 
-WORKDIR $app_root
-RUN if [ ! -d src ]; then mkdir src ; fi
+ARG app_name
 
 COPY ./scripts ./scripts
 COPY ./src ./src
@@ -24,24 +13,22 @@ COPY ./go.sum ./go.sum
 
 RUN ./scripts/get_deps
 
-
 RUN ./scripts/build ${app_name}
 
 
 
-FROM golang:1.17-alpine as runner
+FROM alpine:3.15 as runner
 
-# It seems I have to copy these
-# TODO: Would be good if I didn't have to copy them
-# And would be good if I could configure it in the CMD line as well
-# https://github.com/Gamma169/go-service-template/issues/1
+ARG app_name
+ENV app_name ${app_name} 
 
-ARG app_name=foobar
-ARG service_root=/opt/service
-ARG app_root=${service_root}/${app_name}
-WORKDIR $app_root
+# Note we are following the unix file-system standard by placing our third-party app in the /opt folder
+COPY --from=builder /go/migrations /opt/${app_name}/migrations
+COPY --from=builder /go/bin/${app_name} /opt/${app_name}/${app_name}
 
+# Need workdir because otherwise docker runs command in root, and app can't find migrations folder
+WORKDIR /opt/${app_name}
 
-COPY --from=builder ${app_root}/bin/${app_name} ${app_root}/bin/${app_name}
-
-CMD ["./bin/foobar"]
+# Despite CMD being in "shell form" and not "exec form," 
+# it appears that the app still responds to a SIGTERM and runs with PID=1 contrary to documentation
+CMD /opt/${app_name}/${app_name}
