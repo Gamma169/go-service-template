@@ -31,8 +31,7 @@ RUN ./scripts/build ${app_name}
 FROM golang:1.17-alpine as runner
 
 ARG app_name
-# This probably won't build without this command...
-# ENV app_name ${app_name} 
+ENV app_name ${app_name} 
 ARG service_root
 ARG app_root
 
