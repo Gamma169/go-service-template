@@ -6,7 +6,6 @@ ARG app_name
 
 COPY ./scripts ./scripts
 COPY ./src ./src
-COPY ./migrations ./migrations
 
 COPY ./go.mod ./go.mod
 COPY ./go.sum ./go.sum
@@ -23,7 +22,7 @@ ARG app_name
 ENV app_name ${app_name} 
 
 # Note we are following the unix file-system standard by placing our third-party app in the /opt folder
-COPY --from=builder /go/migrations /opt/${app_name}/migrations
+COPY ./migrations /opt/${app_name}/migrations
 COPY --from=builder /go/bin/${app_name} /opt/${app_name}/${app_name}
 
 # Need workdir because otherwise docker runs command in root, and app can't find migrations folder
