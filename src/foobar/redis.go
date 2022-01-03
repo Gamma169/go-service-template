@@ -9,7 +9,6 @@ package main
 //     "time"
 // )
 
-
 // func initRedis() {
 
 //     verificationTimeoutMinutes, err := strconv.Atoi(getOptionalEnv("VERIFICATION_TIMEOUT_MINUTES", "5"))
@@ -21,10 +20,9 @@ package main
 
 //     baseContext = context.Background()
 //     connectToRedis()
-    
+
 //     debugLog("Sucessfully established redis connection")
 // }
-
 
 // func connectToRedis() {
 
@@ -37,7 +35,7 @@ package main
 //         }
 //     } else {
 //         redisURL := getRequiredEnv("REDIS_HOST") + ":" + getOptionalEnv("REDIS_PORT", "6379")
-//         redisPassword := getOptionalEnv("REDIS_PASSWORD", "")    
+//         redisPassword := getOptionalEnv("REDIS_PASSWORD", "")
 //         redisOptions = &redis.Options{
 //                             Addr: redisURL,
 //                             Password: redisPassword,
@@ -53,11 +51,10 @@ package main
 
 //     redisClient = redis.NewClient(redisOptions)
 
-
 //     var err error
 //     for tries := 0; tries == 0 || err != nil; tries++ {
 //         _, err = redisClient.Ping(baseContext).Result()
-            
+
 //         if err != nil {
 //             if tries > 2 {
 //                 logError(errors.New("Error: Could not connect to Redis"), nil)
