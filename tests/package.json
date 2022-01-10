@@ -22,7 +22,7 @@
     "pg": "^7.4.1"
   },
   "engines": {
-    "node": ">= 7.6"
+    "node": ">= 12.19"
   },
   "private": true
 }
