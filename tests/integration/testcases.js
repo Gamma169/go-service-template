@@ -74,4 +74,4 @@ module.exports = {
   arrayToStr,
   dbSetupModels,
   dbTeardownQuery,
-}
+};

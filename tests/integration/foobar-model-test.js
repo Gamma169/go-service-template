@@ -26,7 +26,7 @@ let testsPGClient;
 describe('foobar Model Tests:', function() {
 
   before('Setup Database Connections', function(done) {
-    const port = parseInt(process.env.DATABASE_PORT || '5432')
+    const port = parseInt(process.env.DATABASE_PORT || '5432');
     testsPGClient = new Client({
       user: 'postgres',
       host: 'localhost',
@@ -108,40 +108,40 @@ describe('foobar Model Tests:', function() {
 
         it('should be able to get jsonapi models for the user:' + id, function(done) {
           chai.request(SERVICE_URL)
-          .get('/user/foobar-models')
-          .set(REQUESTER_ID_HEADER, id)
-          .set('Accept', 'application/vnd.api+json')
-          .then(function(resp) {
+            .get('/user/foobar-models')
+            .set(REQUESTER_ID_HEADER, id)
+            .set('Accept', 'application/vnd.api+json')
+            .then(function(resp) {
             
-            const returnedModels = resp.body;
-            chai.assert.equal(returnedModels.data.length, modelsForId.length, "returns same number of models as in testcases");
-            modelsForId.forEach(mockModel => {
-              const returnedModel = returnedModels.data.find(retModel => retModel.id === mockModel.id);
+              const returnedModels = resp.body;
+              chai.assert.equal(returnedModels.data.length, modelsForId.length, "returns same number of models as in testcases");
+              modelsForId.forEach(mockModel => {
+                const returnedModel = returnedModels.data.find(retModel => retModel.id === mockModel.id);
 
-              chai.assert.deepEqual(returnedModel, {
-                attributes: {
-                  'name': mockModel.name,
-                  'age': mockModel.age,
-                  'some-prop': mockModel.some_prop,
-                  'some-nullable-prop': mockModel.some_nullable_prop,
-                  'some-arr-prop': mockModel.some_arr_prop,
-                  // jsonapi library in golang returns seconds since 1970.  getTime returns mS, so slight convertion is necessary
-                  'date-created': new Date(mockModel.date_created).getTime()/1000,
-                  'last-updated': new Date(mockModel.last_updated).getTime()/1000,
-                  // This is only necessary for ember-save-relationships mixin
-                  '__id__': "",
-                },
-                id: mockModel.id,
-                type: 'foobar-model',
-              }, "models match");
+                chai.assert.deepEqual(returnedModel, {
+                  attributes: {
+                    'name': mockModel.name,
+                    'age': mockModel.age,
+                    'some-prop': mockModel.some_prop,
+                    'some-nullable-prop': mockModel.some_nullable_prop,
+                    'some-arr-prop': mockModel.some_arr_prop,
+                    // jsonapi library in golang returns seconds since 1970.  getTime returns mS, so slight convertion is necessary
+                    'date-created': new Date(mockModel.date_created).getTime()/1000,
+                    'last-updated': new Date(mockModel.last_updated).getTime()/1000,
+                    // This is only necessary for ember-save-relationships mixin
+                    '__id__': "",
+                  },
+                  id: mockModel.id,
+                  type: 'foobar-model',
+                }, "models match");
 
-            });
+              });
 
-            // Test is sucessful
-            done();
+              // Test is sucessful
+              done();
 
-          }, done)
-          .catch(done);
+            }, done)
+            .catch(done);
         });
 
       });
