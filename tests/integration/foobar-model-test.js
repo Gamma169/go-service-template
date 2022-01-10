@@ -33,18 +33,21 @@ describe('foobar Model Tests:', function() {
       database: DATABASE_NAME,
       port,
     });
-    testsPGClient.connect().catch(function(err) {
-      console.error(err)  // eslint-disable-line
-      console.error("ERROR: Connection to postgres not established -- Check your docker container and port mappings.  Make sure it's running on port: " + port); // eslint-disable-line
-      testsPGClient.end();
-      process.exit(1);
-    });
-    setTimeout(done, 250);
+    testsPGClient.connect()
+      .then(() => done())
+      .catch(function(err) {
+        console.error("ERROR: Connection to postgres not established -- Check your docker container and port mappings.  Make sure it's running on port: " + port);
+        console.error(err);
+        testsPGClient.end();
+        process.exit(1);
+      });
+    
   });
 
   after('Shutdown Database Connections', function(done) {
-    testsPGClient.end();
-    setTimeout(done, 250);
+    testsPGClient
+      .end()
+      .finally(() => done());
   });
 
 
