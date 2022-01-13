@@ -203,9 +203,8 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer func() { sendErrorOnError(err, errStatus, w, r) }()
 
-	var model FoobarModel
-	r.Body = http.MaxBytesReader(w, r.Body, 32768) // Blocks the read of anything larger than ~32000 bytes
-	if err, errStatus = PreProcessInput(&model, r); err != nil {
+	var model FoobarModel	
+	if err, errStatus = PreProcessInput(&model, w, r, 32768); err != nil {
 		return
 	}
 

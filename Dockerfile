@@ -10,9 +10,9 @@ COPY ./src ./src
 COPY ./go.mod ./go.mod
 COPY ./go.sum ./go.sum
 
-RUN ./scripts/get_deps
+RUN ./scripts/get_deps.sh
 
-RUN ./scripts/build ${app_name}
+RUN ./scripts/build.sh ${app_name}
 
 
 
