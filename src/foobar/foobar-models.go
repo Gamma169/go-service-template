@@ -203,7 +203,7 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer func() { sendErrorOnError(err, errStatus, w, r) }()
 
-	var model FoobarModel	
+	var model FoobarModel
 	if err, errStatus = PreProcessInput(&model, w, r, 32768); err != nil {
 		return
 	}
