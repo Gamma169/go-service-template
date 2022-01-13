@@ -15,8 +15,16 @@ type InputObject interface {
 	Validate() error
 }
 
-func PreProcessInput(input InputObject, r *http.Request) (error, int) {
+func PreProcessInput(input InputObject, w http.ResponseWriter, r *http.Request, maxBytes int) (error, int) {
 	var err error
+
+    max := 131072
+    if maxBytes != 0 {
+        max = maxBytes
+    }
+    // Block the read of any body too large in order to help prevent DoS attacks
+    r.Body = http.MaxBytesReader(w, r.Body, int64(max))
+    
 
 	header := r.Header.Get(ContentTypeHeader)
 	if header == JSONContentType {
