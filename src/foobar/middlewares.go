@@ -52,7 +52,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			r.Header.Set(TRACE_ID_HEADER, requestId)
 		}
 
-		debugLog(BoldPrint, HeaderPrint, "Recieved:", r.RequestURI, "--", requestId, EndPrint)
+		debugLog(BoldPrint, HeaderPrint, "Received:", r.RequestURI, "--", requestId, EndPrint)
 		next.ServeHTTP(w, r)
 		// TODO: Prob implement custom responseWriter to be able to get status from request
 		// https://github.com/Gamma169/go-service-template/issues/2
