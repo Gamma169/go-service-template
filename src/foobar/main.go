@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+    "github.com/Gamma169/go-server-helpers/environments"
+    "github.com/Gamma169/go-server-helpers/server"
 	"github.com/gorilla/mux"
 	"math/rand"
 	"net/http"
@@ -92,6 +94,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
  * *******************************************/
 
 func main() {
+
 	router := mux.NewRouter()
 	router.Use(loggingMiddleware)
 
@@ -114,5 +117,6 @@ func main() {
 	// This route should always be at the bottom
 	// router.Path("/{service:[a-zA-Z0-9_-]+}{endpoint:.*}").HandlerFunc(ProxyHandler)
 
-	SetupAndRunServer(router)
+    port := environments.GetOptionalEnv(SERVICE_PORT_ENV_VAR, environments.GetOptionalEnv("PORT", DEFAULT_PORT))
+	server.SetupAndRunServer(router, port, debug, shutdown)
 }
