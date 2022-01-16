@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	envs "github.com/Gamma169/go-server-helpers/environments"
 	_ "github.com/lib/pq"
 	"reflect"
 	"strings"
@@ -14,18 +15,18 @@ func initDB() {
 	debugLog("Establishing connection with database")
 	var err error
 
-	dbURL := getOptionalEnv("DATABASE_URL", "")
+	dbURL := envs.GetOptionalEnv("DATABASE_URL", "")
 	if dbURL != "" {
 		DB, err = sql.Open("postgres", dbURL)
 	} else {
 		DB, err = sql.Open("postgres",
 			fmt.Sprintf("user='%s' password='%s' dbname='%s' host='%s' port=%s sslmode=%s",
-				getRequiredEnv("DATABASE_USER"),
-				getOptionalEnv("DATABASE_PASSWORD", ""),
-				getRequiredEnv("DATABASE_NAME"),
-				getRequiredEnv("DATABASE_HOST"),
-				getOptionalEnv("DATABASE_PORT", "5432"),
-				getOptionalEnv("SSL_MODE", "disable")))
+				envs.GetRequiredEnv("DATABASE_USER"),
+				envs.GetOptionalEnv("DATABASE_PASSWORD", ""),
+				envs.GetRequiredEnv("DATABASE_NAME"),
+				envs.GetRequiredEnv("DATABASE_HOST"),
+				envs.GetOptionalEnv("DATABASE_PORT", "5432"),
+				envs.GetOptionalEnv("SSL_MODE", "disable")))
 	}
 
 	if err != nil {

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-    "github.com/Gamma169/go-server-helpers/environments"
-    "github.com/Gamma169/go-server-helpers/server"
+	envs "github.com/Gamma169/go-server-helpers/environments"
+	"github.com/Gamma169/go-server-helpers/server"
 	"github.com/gorilla/mux"
 	"math/rand"
 	"net/http"
@@ -54,18 +54,32 @@ var deleteFoobarStmt *sql.Stmt
 // This function is builtin go func that gets automatically called
 func init() {
 	rand.Seed(time.Now().UnixNano())
+	if releaseMode = envs.GetOptionalEnv("RELEASE_MODE", "dev"); releaseMode != "production" {
+		debug = true
+	}
+
 	// Note that we check any required environment variables before anything else
 	// in order not to create any "hanging" db connections and immediately terminate
 	// if we are missing any down the line
 	checkRequiredEnvs()
-	initDebug()
 	initDB()
 
-	if getOptionalEnv("RUN_MIGRATIONS", "false") == "true" {
+	if envs.GetOptionalEnv("RUN_MIGRATIONS", "false") == "true" {
 		initMigrations()
 	}
 
 	initFoobarModelsPreparedStatements()
+}
+
+func checkRequiredEnvs() {
+	// Not sure if I should use the getOptionalEnv function here or just os.LookupEnv
+	// Because if I use getOptionalEnv and it doesn't exist, we output the logs for it twice
+	// I think that's fine, but I need to think on it
+	if envs.GetOptionalEnv("DATABASE_URL", "") == "" {
+		envs.GetRequiredEnv("DATABASE_NAME")
+		envs.GetRequiredEnv("DATABASE_HOST")
+		envs.GetRequiredEnv("DATABASE_USER")
+	}
 }
 
 // This is a custom function that is called for graceful shutdown
@@ -100,7 +114,7 @@ func main() {
 
 	router.Path("/health").Methods(http.MethodGet).HandlerFunc(HealthHandler)
 
-	if getOptionalEnv("RUNNING_LOCALLY", "true") == "true" {
+	if envs.GetOptionalEnv("RUNNING_LOCALLY", "true") == "true" {
 		AddCORSMiddlewareAndEndpoint(router)
 	}
 
@@ -117,6 +131,6 @@ func main() {
 	// This route should always be at the bottom
 	// router.Path("/{service:[a-zA-Z0-9_-]+}{endpoint:.*}").HandlerFunc(ProxyHandler)
 
-    port := environments.GetOptionalEnv(SERVICE_PORT_ENV_VAR, environments.GetOptionalEnv("PORT", DEFAULT_PORT))
+	port := envs.GetOptionalEnv(SERVICE_PORT_ENV_VAR, envs.GetOptionalEnv("PORT", DEFAULT_PORT))
 	server.SetupAndRunServer(router, port, debug, shutdown)
 }
