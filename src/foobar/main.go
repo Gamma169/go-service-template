@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-    "github.com/Gamma169/go-server-helpers/db"
-	envs "github.com/Gamma169/go-server-helpers/environments"
+  "github.com/Gamma169/go-server-helpers/db"
+  envs "github.com/Gamma169/go-server-helpers/environments"
 	"github.com/Gamma169/go-server-helpers/server"
 	"github.com/gorilla/mux"
 	"math/rand"
@@ -131,6 +131,7 @@ func main() {
 	// TODO
 	// This route should always be at the bottom
 	// router.Path("/{service:[a-zA-Z0-9_-]+}{endpoint:.*}").HandlerFunc(ProxyHandler)
+
 
 	port := envs.GetOptionalEnv(SERVICE_PORT_ENV_VAR, envs.GetOptionalEnv("PORT", DEFAULT_PORT))
 	server.SetupAndRunServer(router, port, debug, shutdown)
