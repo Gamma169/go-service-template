@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-  "github.com/Gamma169/go-server-helpers/db"
-  envs "github.com/Gamma169/go-server-helpers/environments"
+    "github.com/Gamma169/go-server-helpers/db"
+    envs "github.com/Gamma169/go-server-helpers/environments"
 	"github.com/Gamma169/go-server-helpers/server"
 	"github.com/gorilla/mux"
 	"math/rand"
@@ -40,6 +40,7 @@ const DB_ARRAY_DELIMITER = ":::"
 
 var releaseMode string
 var debug bool
+var isRunningLocally bool
 
 var DB *sql.DB
 
@@ -58,6 +59,9 @@ func init() {
 	if releaseMode = envs.GetOptionalEnv("RELEASE_MODE", "dev"); releaseMode != "production" {
 		debug = true
 	}
+    if envs.GetOptionalEnv("RUNNING_LOCALLY", "true") == "true"{
+        isRunningLocally = true
+    }
 
 	// Note that we check any required environment variables before anything else
 	// in order not to create any "hanging" db connections and immediately terminate
@@ -66,7 +70,7 @@ func init() {
 	DB = db.InitDB("", debug)
 
 	if envs.GetOptionalEnv("RUN_MIGRATIONS", "false") == "true" {
-		initMigrations()
+		db.InitMigrations(DB, 5000, isRunningLocally, debug)
 	}
 
 	initFoobarModelsPreparedStatements()
@@ -115,7 +119,7 @@ func main() {
 
 	router.Path("/health").Methods(http.MethodGet).HandlerFunc(HealthHandler)
 
-	if envs.GetOptionalEnv("RUNNING_LOCALLY", "true") == "true" {
+	if isRunningLocally {
 		server.AddCORSMiddlewareAndEndpoint(router, REQUESTER_ID_HEADER)
 	}
 
