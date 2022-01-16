@@ -76,6 +76,8 @@ github.com/Gamma169/go-server-helpers v0.1.1-0.20220116063147-a2c20b754419 h1:Ev
 github.com/Gamma169/go-server-helpers v0.1.1-0.20220116063147-a2c20b754419/go.mod h1:iwfDdUsZT3JaUQpjJILjfFfwsCPmLXlwz3KFsnkhLh4=
 github.com/Gamma169/go-server-helpers v0.1.1-0.20220116070114-2e19634f4a67 h1:Q5elLs6qSLYXE2bupUWUvb9L8qBN6adBL++NUwrUvSM=
 github.com/Gamma169/go-server-helpers v0.1.1-0.20220116070114-2e19634f4a67/go.mod h1:iwfDdUsZT3JaUQpjJILjfFfwsCPmLXlwz3KFsnkhLh4=
+github.com/Gamma169/go-server-helpers v0.1.1-0.20220116090739-bfc96674a9b9 h1:iQmurcTZJEJFQFq2Horap8EcLIRliwYDiEckg6TBIVA=
+github.com/Gamma169/go-server-helpers v0.1.1-0.20220116090739-bfc96674a9b9/go.mod h1:RBXNcVi0ltghFtpFit8mZSxL7gOeVqNT7aM6pAHnEXQ=
 github.com/Microsoft/go-winio v0.4.11/go.mod h1:VhR8bwka0BXejwEJY73c50VrPtXAaKcyvVC4A4RozmA=
 github.com/Microsoft/go-winio v0.4.14/go.mod h1:qXqCSQ3Xa7+6tgxaGTIe4Kpcdsi+P8jBhyzoq1bpyYA=
 github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5/go.mod h1:tTuCMEN+UleMWgg9dVx4Hu52b1bJo+59jBh3ajtinzw=

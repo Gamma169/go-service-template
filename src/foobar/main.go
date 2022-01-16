@@ -111,16 +111,16 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	router := mux.NewRouter()
-	router.Use(loggingMiddleware)
+    server.AddLoggingMiddleware(router, TRACE_ID_HEADER, debug)
 
 	router.Path("/health").Methods(http.MethodGet).HandlerFunc(HealthHandler)
 
 	if envs.GetOptionalEnv("RUNNING_LOCALLY", "true") == "true" {
-		AddCORSMiddlewareAndEndpoint(router)
+		server.AddCORSMiddlewareAndEndpoint(router, REQUESTER_ID_HEADER)
 	}
 
 	s := router.PathPrefix("/user").Subrouter()
-	s.Use(RequesterIdHeaderMiddleware)
+	server.AddRequesterIdHeaderMiddleware(s, REQUESTER_ID_HEADER, debug)
 	s.Path("/foobar-models").Methods(http.MethodGet).HandlerFunc(GetFoobarModelHandler)
 	s.Path("/foobar-models").Methods(http.MethodPost).HandlerFunc(CreateOrUpdateFoobarModelHandler)
 	s.Path("/foobar-models/{modelId}").Methods(http.MethodPatch).HandlerFunc(CreateOrUpdateFoobarModelHandler)
