@@ -3,7 +3,7 @@ module foobar
 go 1.17
 
 require (
-	github.com/Gamma169/go-server-helpers v0.1.1-0.20220116094213-10ff2d337c67
+	github.com/Gamma169/go-server-helpers v0.1.1-0.20220116215454-7a9e9b0fec9f
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/google/jsonapi v1.0.0
 	github.com/google/uuid v1.3.0
