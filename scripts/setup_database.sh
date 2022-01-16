@@ -9,6 +9,6 @@ echo 'Sleeping a bit for database to start'
 sleep 6
 
 echo 'Building Server'
-./scripts/build foobar
+./scripts/build.sh foobar
 echo 'Starting server'
 DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 RUN_MIGRATIONS="true" ./bin/foobar

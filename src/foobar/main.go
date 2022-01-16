@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+    "github.com/Gamma169/go-server-helpers/db"
 	envs "github.com/Gamma169/go-server-helpers/environments"
 	"github.com/Gamma169/go-server-helpers/server"
 	"github.com/gorilla/mux"
@@ -62,7 +63,7 @@ func init() {
 	// in order not to create any "hanging" db connections and immediately terminate
 	// if we are missing any down the line
 	checkRequiredEnvs()
-	initDB()
+	DB = db.InitDB("", debug)
 
 	if envs.GetOptionalEnv("RUN_MIGRATIONS", "false") == "true" {
 		initMigrations()

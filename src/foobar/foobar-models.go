@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	// "fmt"
+    "github.com/Gamma169/go-server-helpers/db"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -36,7 +37,7 @@ func (f *FoobarModel) Validate() (err error) {
 	} else if f.SomeProp == "bad prop" {
 		err = errors.New("SomeProp cannot equal 'bad prop'")
 	} else {
-		err = checkStructFieldsForInjection(*f)
+		err = db.CheckStructFieldsForInjection(*f)
 	}
 
 	return
@@ -68,13 +69,13 @@ func (f *FoobarModel) ScanFromRowsOrRow(rowsOrRow interface {
 		f.SomeNullableProp = &nullableStr.String
 	}
 
-	err = assignArrayPropertyFromString(f, "SomeArrProp", arrStr)
+	err = db.AssignArrayPropertyFromString(f, "SomeArrProp", arrStr, DB_ARRAY_DELIMITER)
 
 	// We perform the same function many times- so instead of checking the err every time,
 	// we can do this wrapping to stop execution if any of them throw an error
 	// From: https://stackoverflow.com/questions/15397419/go-handling-multiple-errors-elegantly
 	// assignPropWrapper := func(propStr string, valStr string) bool {
-	//     err = assignArrayPropertyFromString(f, propStr, valStr)
+	//     err = db.AssignArrayPropertyFromString(f, propStr, valStr)
 	//     return err == nil
 	// }
 

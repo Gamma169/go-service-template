@@ -18,4 +18,13 @@ fi
 GOPATH=$LIB_DIR
 
 cd $PROJECT_ROOT
-GOPATH=$GOPATH go get -d ./src/...
+
+if [ $# -eq 0 ]; then
+    GOPATH=$GOPATH go get -d ./src/...
+elif [ $# -eq 1 ]; then
+    GOPATH=$GOPATH go get $1
+else
+    echo "Usage: get_deps.sh [package name]"
+    echo "If [package name] is not provided, will get all deps needed in src"
+    exit 1
+fi
