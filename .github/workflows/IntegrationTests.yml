@@ -67,6 +67,7 @@ jobs:
           DATABASE_PASSWORD: somePassIdk
           DATABASE_HOST: localhost
           RUN_MIGRATIONS: "true"
+          REDIS_URL: "redis://:@localhost:6379"
 
       - name: Add Node
         uses: actions/setup-node@v2
