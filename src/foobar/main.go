@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
     "github.com/Gamma169/go-server-helpers/db"
     envs "github.com/Gamma169/go-server-helpers/environments"
 	"github.com/Gamma169/go-server-helpers/server"
+    "github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
 	"math/rand"
 	"net/http"
@@ -14,12 +16,13 @@ import (
 )
 
 // docker run -d --name=foobar_post -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=foo -p 5432:5432 postgres:9.6.17-alpine
+// docker run -d --name=foobar_redis -p 6379:6379 redis:6-alpine
 
 // Local
-// ./scripts/build.sh foobar && DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 RUN_MIGRATIONS=true ./bin/foobar
+// ./scripts/build.sh foobar && REDIS_HOST=127.0.0.1 DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 RUN_MIGRATIONS=true ./bin/foobar
 
 // Docker
-// docker run -it --rm -e DATABASE_NAME=foo  -e DATABASE_HOST=127.0.0.1 -e DATABASE_USER=postgres -e RUN_MIGRATIONS=true --net=host  --name=foobar gamma169/foobar
+// docker run -it --rm -e REDIS_HOST=127.0.0.1 -e DATABASE_NAME=foo  -e DATABASE_HOST=127.0.0.1 -e DATABASE_USER=postgres -e RUN_MIGRATIONS=true --net=host  --name=foobar gamma169/foobar
 
 // Or
 // ./scripts/setup_database.sh
@@ -43,6 +46,7 @@ var debug bool
 var isRunningLocally bool
 
 var DB *sql.DB
+var redisClient *redis.Client
 
 var getFoobarModelsStmt *sql.Stmt
 var postFoobarModelStmt *sql.Stmt
@@ -67,24 +71,20 @@ func init() {
 	// in order not to create any "hanging" db connections and immediately terminate
 	// if we are missing any down the line
 	checkRequiredEnvs()
-	DB = db.InitDB("", debug)
+    
+    redisClient = db.InitRedis("", false, debug)
+    DB = db.InitPostgres("", debug)
 
 	if envs.GetOptionalEnv("RUN_MIGRATIONS", "false") == "true" {
-		db.InitMigrations(DB, 5000, isRunningLocally, debug)
+		db.InitPostgresMigrations(DB, 7000, isRunningLocally, debug)
 	}
 
 	initFoobarModelsPreparedStatements()
 }
 
 func checkRequiredEnvs() {
-	// Not sure if I should use the getOptionalEnv function here or just os.LookupEnv
-	// Because if I use getOptionalEnv and it doesn't exist, we output the logs for it twice
-	// I think that's fine, but I need to think on it
-	if envs.GetOptionalEnv("DATABASE_URL", "") == "" {
-		envs.GetRequiredEnv("DATABASE_NAME")
-		envs.GetRequiredEnv("DATABASE_HOST")
-		envs.GetRequiredEnv("DATABASE_USER")
-	}
+	db.CheckRequiredPostgresEnvs("")
+	db.CheckRequiredRedisEnvs("", false)
 }
 
 // This is a custom function that is called for graceful shutdown
@@ -98,14 +98,18 @@ func shutdown() {
  * *******************************************/
 
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
-
 	if err := DB.Ping(); err != nil {
-		logError(errors.New("Error: Could not connect to DB"), r)
-		panic(err)
-	}
+        logError(errors.New("Error: Could not connect to DB"), r)
+        panic(err)
+    }
 
-	debugLog(BluePrint + "foobar + DB connections Healthy (☆^ー^☆)" + EndPrint)
-	json.NewEncoder(w).Encode("foobar + DB connections Healthy! (☆^ー^☆)")
+    if _, err := redisClient.Ping(context.Background()).Result(); err != nil {
+        logError(errors.New("Error: Could not connect to Redis"), nil)
+        panic(err)
+    }
+
+    debugLog(BluePrint + "foobar service + DB + Redis connections Healthy (☆^ー^☆)" + EndPrint)
+    json.NewEncoder(w).Encode("foobar service + DB + Redis connections Healthy! (☆^ー^☆)")
 }
 
 /*********************************************

@@ -3,7 +3,8 @@ module foobar
 go 1.17
 
 require (
-	github.com/Gamma169/go-server-helpers v0.1.1-0.20220116215454-7a9e9b0fec9f
+	github.com/Gamma169/go-server-helpers v0.1.1-0.20220117001327-142406a8c117
+	github.com/go-redis/redis/v8 v8.11.4
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/google/jsonapi v1.0.0
 	github.com/google/uuid v1.3.0
@@ -12,6 +13,8 @@ require (
 )
 
 require (
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	go.uber.org/atomic v1.6.0 // indirect
