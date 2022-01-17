@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	// "fmt"
-    "github.com/Gamma169/go-server-helpers/db"
-    "github.com/Gamma169/go-server-helpers/server"
+	"github.com/Gamma169/go-server-helpers/db"
+	"github.com/Gamma169/go-server-helpers/server"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -208,13 +208,13 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 	var model FoobarModel
 	if err = server.PreProcessInputFromHeaders(&model, 32768, w, r); err != nil {
 		errStatus = http.StatusBadRequest
-        return
+		return
 	}
 
-    respStatus := http.StatusOK
+	respStatus := http.StatusOK
 	requesterId := r.Header.Get(REQUESTER_ID_HEADER) // Should exist and be valid because of middleware
 	if r.Method == http.MethodPost {
-        respStatus = http.StatusCreated
+		respStatus = http.StatusCreated
 		if model.Id == ZERO_UUID || strings.TrimSpace(model.Id) == "" {
 			model.Id = uuid.New().String()
 		}

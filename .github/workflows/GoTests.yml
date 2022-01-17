@@ -1,0 +1,39 @@
+
+name: Go Tests
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+
+jobs:
+
+  gofmt-check:
+    runs-on: ubuntu-latest
+    env:
+      SERVICE_NAME: foobar
+    strategy:
+      matrix:
+        go: [ '1.17' ]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Add Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      
+      - name: Check Build And Deps Are Satisfied
+        run:  ./scripts/build.sh ${SERVICE_NAME}
+
+      - name: Run gofmt
+        run: gofmt -w ./src
+
+      - name: Check If Files Changed
+        run: if git diff-index --quiet HEAD --; then true; else false; fi
