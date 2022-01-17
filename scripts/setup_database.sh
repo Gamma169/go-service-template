@@ -12,7 +12,11 @@ docker run -d --name=foobar_redis -p 6379:6379 redis:6-alpine
 echo 'Sleeping a bit for redis to start'
 sleep 4
 
+# stop on error
+set -e -o pipefail
 
+echo 'Getting Dependencies'
+./scripts/get_deps.sh
 echo 'Building Server'
 ./scripts/build.sh foobar
 echo 'Starting server'
