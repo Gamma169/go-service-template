@@ -39,6 +39,11 @@ jobs:
         ports:
           - 5432:5432
 
+      redis:
+        image: redis:6.2.6-alpine3.15
+        ports:
+          - 6379:6379
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -62,6 +67,7 @@ jobs:
           DATABASE_PASSWORD: somePassIdk
           DATABASE_HOST: localhost
           RUN_MIGRATIONS: "true"
+          REDIS_URL: "redis://:@localhost:6379"
 
       - name: Add Node
         uses: actions/setup-node@v2

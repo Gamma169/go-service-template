@@ -11,7 +11,7 @@ P_ROOT=$(cd $SCRIPTS_DIR/.. && pwd)
 GOPATH=$P_ROOT/lib
 
 if [ $# -ne 1 ]; then
-    echo "Usage: build [service-name]"
+    echo "Usage: build.sh [service-name]"
     exit 1
 fi
 

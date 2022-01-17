@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	// "fmt"
+	"github.com/Gamma169/go-server-helpers/db"
+	"github.com/Gamma169/go-server-helpers/server"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -36,7 +38,7 @@ func (f *FoobarModel) Validate() (err error) {
 	} else if f.SomeProp == "bad prop" {
 		err = errors.New("SomeProp cannot equal 'bad prop'")
 	} else {
-		err = checkStructFieldsForInjection(*f)
+		err = db.CheckStructFieldsForInjection(*f)
 	}
 
 	return
@@ -68,13 +70,13 @@ func (f *FoobarModel) ScanFromRowsOrRow(rowsOrRow interface {
 		f.SomeNullableProp = &nullableStr.String
 	}
 
-	err = assignArrayPropertyFromString(f, "SomeArrProp", arrStr)
+	err = db.AssignArrayPropertyFromString(f, "SomeArrProp", arrStr, DB_ARRAY_DELIMITER)
 
 	// We perform the same function many times- so instead of checking the err every time,
 	// we can do this wrapping to stop execution if any of them throw an error
 	// From: https://stackoverflow.com/questions/15397419/go-handling-multiple-errors-elegantly
 	// assignPropWrapper := func(propStr string, valStr string) bool {
-	//     err = assignArrayPropertyFromString(f, propStr, valStr)
+	//     err = db.AssignArrayPropertyFromString(f, propStr, valStr)
 	//     return err == nil
 	// }
 
@@ -182,7 +184,7 @@ func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 	// We have to invoke an anonymous function function here because if we just call sendErrorOnError directly
 	// then we pass in 'err' as it is first initialized-- nil.  And we lose error handling
 	// By wrapping in the anonymous function, err gets passed in with its value at the end of the call as we expect.
-	defer func() { sendErrorOnError(err, http.StatusInternalServerError, w, r) }()
+	defer func() { server.SendErrorOnError(err, http.StatusInternalServerError, w, r, logError) }()
 
 	requesterId := r.Header.Get(REQUESTER_ID_HEADER) // Should exist and be valid because of middleware
 
@@ -191,7 +193,7 @@ func GetFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = WriteModelToResponse(foobarModels, w, r); err == nil {
+	if err = server.WriteModelToResponseFromHeaders(foobarModels, http.StatusOK, w, r); err == nil {
 		debugLog("Found Models ≡(*′▽`)っ!")
 	}
 }
@@ -201,15 +203,18 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var errStatus = http.StatusInternalServerError
 
-	defer func() { sendErrorOnError(err, errStatus, w, r) }()
+	defer func() { server.SendErrorOnError(err, errStatus, w, r, logError) }()
 
 	var model FoobarModel
-	if err, errStatus = PreProcessInput(&model, w, r, 32768); err != nil {
+	if err = server.PreProcessInputFromHeaders(&model, 32768, w, r); err != nil {
+		errStatus = http.StatusBadRequest
 		return
 	}
 
+	respStatus := http.StatusOK
 	requesterId := r.Header.Get(REQUESTER_ID_HEADER) // Should exist and be valid because of middleware
 	if r.Method == http.MethodPost {
+		respStatus = http.StatusCreated
 		if model.Id == ZERO_UUID || strings.TrimSpace(model.Id) == "" {
 			model.Id = uuid.New().String()
 		}
@@ -226,7 +231,7 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = WriteModelToResponse(model, w, r); err == nil {
+	if err = server.WriteModelToResponseFromHeaders(model, respStatus, w, r); err == nil {
 		debugLog("Created or Updated Model!")
 	}
 }
