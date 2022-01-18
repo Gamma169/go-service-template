@@ -172,17 +172,14 @@ describe('foobar Model Tests:', function() {
             const newModelId = newModel.id;
             // TODO: check newModel
 
+            return testsPGClient.query(`SELECT id FROM foobar_models WHERE id = '${newModelId}'`);
+          })
+          .then(function(pgResp) {
+            chai.assert.equal(1, pgResp.rows.length);
+            // TODO: finish
 
-
-            testsPGClient.query(`SELECT id FROM foobar_models WHERE id = '${newModelId}'`)
-              .then(function(pgResp){
-                chai.assert.equal(1, pgResp.rows.length);
-                // TODO: finish
-
-                done();
-              })
-              .catch(done);
-          }, done)
+            done();
+          })
           .catch(done);
       });
 
@@ -215,17 +212,16 @@ describe('foobar Model Tests:', function() {
           .delete('/user/foobar-models/'+ modelToDelete.id)
           .set(REQUESTER_ID_HEADER, modelToDelete.user_id)
           .then(function() {
-            testsPGClient.query(`SELECT id FROM foobar_models`)
-              .then(function(resp){
-                chai.assert.ok(resp.rows);
-                chai.assert.equal(MOCK_MODELS.length-1, resp.rows.length);
-                const nonDeletedModelIds = MOCK_MODELS.filter(model => model.id !== modelToDelete.id).map(m => m.id);
-                const returnedIds = resp.rows.map(m => m.id);
-                chai.assert.sameMembers(nonDeletedModelIds, returnedIds);
-                done();
-              })
-              .catch(done);
-          }, done)
+            return testsPGClient.query(`SELECT id FROM foobar_models`);
+          })
+          .then(function(pgResp) {
+            chai.assert.ok(pgResp.rows);
+            chai.assert.equal(MOCK_MODELS.length-1, pgResp.rows.length);
+            const nonDeletedModelIds = MOCK_MODELS.filter(model => model.id !== modelToDelete.id).map(m => m.id);
+            const returnedIds = pgResp.rows.map(m => m.id);
+            chai.assert.sameMembers(nonDeletedModelIds, returnedIds);
+            done();
+          })
           .catch(done);
       });
 
@@ -236,14 +232,13 @@ describe('foobar Model Tests:', function() {
           .delete('/user/foobar-models/'+ modelToDelete.id)
           .set(REQUESTER_ID_HEADER, badClientId)
           .then(function() {
-            testsPGClient.query(`SELECT id FROM foobar_models`)
-              .then(function(resp){
-                chai.assert.ok(resp.rows);
-                chai.assert.equal(MOCK_MODELS.length, resp.rows.length);
-                done();
-              })
-              .catch(done);
-          }, done)
+            return testsPGClient.query(`SELECT id FROM foobar_models`);
+          })
+          .then(function(pgResp) {
+            chai.assert.ok(pgResp.rows);
+            chai.assert.equal(MOCK_MODELS.length, pgResp.rows.length);
+            done();
+          })
           .catch(done);
       });
     });
