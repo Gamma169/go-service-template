@@ -9,6 +9,7 @@ module.exports = {
     "indent": [1, 2, { "SwitchCase": 1 }],
     "brace-style": [1, "stroustrup", { "allowSingleLine": true }],
     "semi": [1, "always", { "omitLastInOneLineBlock": true }],
+    "no-trailing-spaces": 1,
   },
   extends: 'eslint:recommended',
   env: {

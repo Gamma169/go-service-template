@@ -41,7 +41,6 @@ describe('foobar Model Tests:', function() {
         testsPGClient.end();
         process.exit(1);
       });
-    
   });
 
   after('Shutdown Database Connections', function(done) {
@@ -52,7 +51,7 @@ describe('foobar Model Tests:', function() {
 
 
   describe('foobar Model Endpoint Tests', function() {
-    
+
     beforeEach('Populate Database', function(done) {
       dbSetupModels(testsPGClient)
         .then(function() {
@@ -71,7 +70,7 @@ describe('foobar Model Tests:', function() {
     });
 
     describe('Get Model Tests', function() {
-      
+
       USER_IDS.forEach(id => {
         const modelsForId = MOCK_MODELS.filter(model => model.user_id === id);
 
@@ -80,7 +79,7 @@ describe('foobar Model Tests:', function() {
             .get('/user/foobar-models')
             .set(REQUESTER_ID_HEADER, id)
             .then(function(resp) {
-              
+
               const returnedModels = resp.body;
               chai.assert.equal(returnedModels.length, modelsForId.length, "returns same number of models as in testcases");
               modelsForId.forEach(mockModel => {
@@ -98,7 +97,7 @@ describe('foobar Model Tests:', function() {
                 // golang json encoding time field returns much more precision than what I provide in the mocks so we do date checking seperately
                 chai.assert.include(returnedModel.dateCreated, mockModel.date_created, "mock dateCreated is in returned date");
                 chai.assert.include(returnedModel.lastUpdated, mockModel.last_updated, "mock lastUpdated is in returned date");
-                
+
               });
 
               // Test is sucessful
@@ -115,7 +114,7 @@ describe('foobar Model Tests:', function() {
             .set(REQUESTER_ID_HEADER, id)
             .set('Accept', 'application/vnd.api+json')
             .then(function(resp) {
-            
+
               const returnedModels = resp.body;
               chai.assert.equal(returnedModels.data.length, modelsForId.length, "returns same number of models as in testcases");
               modelsForId.forEach(mockModel => {
@@ -153,7 +152,7 @@ describe('foobar Model Tests:', function() {
 
 
     describe('Post Model Tests', function() {
-      
+
       it('should be able to add new model WITHOUT id to the database using json', function(done) {
         const input = {
           name: 'some post model',
@@ -174,7 +173,7 @@ describe('foobar Model Tests:', function() {
             // TODO: check newModel
 
 
-            
+
             testsPGClient.query(`SELECT id FROM foobar_models WHERE id = '${newModelId}'`)
               .then(function(pgResp){
                 chai.assert.equal(1, pgResp.rows.length);

@@ -3,7 +3,7 @@ const DEFAULT_PORT = 7890;
 const DB_ARR_DELIMITER = ':::';
 const REQUESTER_ID_HEADER = 'user-id';
 
-function getPort() {    
+function getPort() {
   let portNum = process.env.FOOBAR_PORT || DEFAULT_PORT;
   return parseInt(portNum);
 }
@@ -22,8 +22,8 @@ const MOCK_MODELS = [
     some_prop: 'asdasdasd',
     some_nullable_prop: null,
     some_arr_prop:['asd','qwe','poipo', 'mnk'],
-    date_created: "2021-11-20", 
-    last_updated: "2021-11-27", 
+    date_created: "2021-11-20",
+    last_updated: "2021-11-27",
   },
   {
     id: '9bc1643d-1a24-4ac2-a4c0-e59b797f7352',
@@ -33,8 +33,8 @@ const MOCK_MODELS = [
     some_prop: 'this is a prop',
     some_nullable_prop: 'this is not null',
     some_arr_prop:['single elem'],
-    date_created: "2021-10-31", 
-    last_updated: "2021-11-13", 
+    date_created: "2021-10-31",
+    last_updated: "2021-11-13",
   },
 ];
 
@@ -44,7 +44,7 @@ function arrayToStr(arr) {
 
 function dbSetupModels(pgClient) {
   let modelInsertString = '';
-  
+
   MOCK_MODELS.forEach(function(model) {
     const arrStr = arrayToStr(model.some_arr_prop);
     modelInsertString = modelInsertString.concat(`
