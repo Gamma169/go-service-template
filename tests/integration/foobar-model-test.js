@@ -35,11 +35,9 @@ describe('foobar Model Tests:', function() {
     });
     testsPGClient.connect()
       .then(() => done())
-      .catch(function(err) {
-        console.error("ERROR: Connection to postgres not established -- Check your docker container and port mappings.  Make sure it's running on port: " + port);
-        console.error(err);
+      .catch(function() {
         testsPGClient.end();
-        process.exit(1);
+        done(new Error("Connection to postgres not established -- Check your docker container and port mappings.  Make sure it's running on port: " + port));
       });
   });
 
