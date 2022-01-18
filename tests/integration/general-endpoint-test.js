@@ -8,7 +8,7 @@ require('./health-check-test');
 
 const {
   SERVICE_URL,
-  USER_ID_HEADER,
+  REQUESTER_ID_HEADER,
 } = require('./testcases.js');
 
 const endpointsToTest = [
@@ -34,9 +34,9 @@ describe("General Endpoint Tests", function() {
     methods.forEach(function(method) {
       improperIdHeaders.forEach(function(header) {
 
-        it(`should return error on endpoint '${method}' '${endpoint}' if header '${USER_ID_HEADER}' is improper: ${header}`, function(done) {
+        it(`should return error on endpoint '${method}' '${endpoint}' if header '${REQUESTER_ID_HEADER}' is improper: ${header}`, function(done) {
           chai.request(SERVICE_URL)[method](endpoint)
-            // .set(USER_ID_HEADER, header)
+            .set(REQUESTER_ID_HEADER, header)
             .then(done, function(err) {
               chai.assert.equal(400, err.status);
               done();
