@@ -103,7 +103,7 @@ describe('foobar Model Tests:', function() {
               // Test is sucessful
               done();
 
-            }, done)
+            })
             .catch(done);
         });
 
@@ -142,7 +142,7 @@ describe('foobar Model Tests:', function() {
               // Test is sucessful
               done();
 
-            }, done)
+            })
             .catch(done);
         });
 
