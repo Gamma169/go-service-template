@@ -41,8 +41,8 @@ const DEFAULT_PORT = "7890"
 
 const DB_ARRAY_DELIMITER = ":::"
 
-var releaseMode string
 var debug bool
+var releaseMode string
 var isRunningLocally bool
 
 var DB *sql.DB
@@ -90,7 +90,7 @@ func checkRequiredEnvs() {
 // This is a custom function that is called for graceful shutdown
 func shutdown() {
 	// close redis connections
-	// redisClient.Close()
+	redisClient.Close()
 }
 
 /*********************************************

@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	// "fmt"
 	"github.com/Gamma169/go-server-helpers/db"
 	"github.com/Gamma169/go-server-helpers/server"
 	"github.com/google/uuid"

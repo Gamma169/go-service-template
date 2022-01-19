@@ -27,23 +27,24 @@ const improperIdHeaders = [
   null,
 ];
 
-
 describe("General Endpoint Tests", function() {
 
-  endpointsToTest.forEach(function({endpoint, methods}) {
-    methods.forEach(function(method) {
-      improperIdHeaders.forEach(function(header) {
+  describe("Endpoints With user-id Header Requirements Tests", function() {
+    endpointsToTest.forEach(function({endpoint, methods}) {
+      methods.forEach(function(method) {
+        improperIdHeaders.forEach(function(header) {
 
-        it(`should return error on endpoint '${method}' '${endpoint}' if header '${REQUESTER_ID_HEADER}' is improper: ${header}`, function(done) {
-          chai.request(SERVICE_URL)[method](endpoint)
-            .set(REQUESTER_ID_HEADER, header)
-            .then(done, function(err) {
-              chai.assert.equal(400, err.status);
-              done();
-            })
-            .catch(done);
+          it(`should return error on endpoint '${method}' '${endpoint}' if header '${REQUESTER_ID_HEADER}' is improper: ${header}`, function(done) {
+            chai.request(SERVICE_URL)[method](endpoint)
+              .set(REQUESTER_ID_HEADER, header)
+              .then(done, function(err) {
+                chai.assert.equal(400, err.status);
+                done();
+              })
+              .catch(done);
+          });
+
         });
-
       });
     });
   });
