@@ -60,12 +60,7 @@ var deleteFoobarStmt *sql.Stmt
 // This function is builtin go func that gets automatically called
 func init() {
 	rand.Seed(time.Now().UnixNano())
-	if releaseMode = envs.GetOptionalEnv("RELEASE_MODE", "dev"); releaseMode != "production" {
-		debug = true
-	}
-	if envs.GetOptionalEnv("RUNNING_LOCALLY", "true") == "true" {
-		isRunningLocally = true
-	}
+	setReleaseRunningMode()
 
 	// Note that we check any required environment variables before anything else
 	// in order not to create any "hanging" db connections and immediately terminate
@@ -80,6 +75,15 @@ func init() {
 	}
 
 	initFoobarModelsPreparedStatements()
+}
+
+func setReleaseRunningMode() {
+	if releaseMode = envs.GetOptionalEnv("RELEASE_MODE", "dev"); releaseMode != "production" {
+		debug = true
+	}
+	if envs.GetOptionalEnv("RUNNING_LOCALLY", "true") == "true" {
+		isRunningLocally = true
+	}
 }
 
 func checkRequiredEnvs() {
