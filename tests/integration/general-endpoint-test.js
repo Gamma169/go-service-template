@@ -38,7 +38,7 @@ describe("General Endpoint Tests", function() {
             chai.request(SERVICE_URL)[method](endpoint)
               .set(REQUESTER_ID_HEADER, header)
               .then(done, function(err) {
-                chai.assert.equal(400, err.status);
+                chai.assert.equal(err.status, 400);
                 done();
               })
               .catch(done);
