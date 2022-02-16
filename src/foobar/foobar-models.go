@@ -116,20 +116,15 @@ func (f *FoobarModel) ConvertToDatabaseInput(requesterId string) []interface{} {
 func initFoobarModelsPreparedStatements() {
 	var err error
 
-	panicOnError := func() {
-		if err != nil {
-			panic(err)
-		}
+	if getFoobarModelsStmt, err = DB.Prepare(`
+		SELECT f.id, 
+			f.name, f.age, f.some_prop, f.some_nullable_prop, f.some_arr_prop,
+			f.date_created, f.last_updated 
+		FROM foobar_models f
+		WHERE f.user_id = ($1);
+	`); err != nil {
+		panic(err)
 	}
-	defer panicOnError()
-
-	getFoobarModelsStmt, err = DB.Prepare(`
-        SELECT f.id, 
-            f.name, f.age, f.some_prop, f.some_nullable_prop, f.some_arr_prop,
-            f.date_created, f.last_updated 
-        FROM foobar_models f
-        WHERE f.user_id = ($1);
-    `)
 
 	// TODO Can make one for all as well to avoid multiple networks calls
 	//     getSubmodelForFoobarModelStmt, err = DB.Prepare(`
@@ -138,32 +133,38 @@ func initFoobarModelsPreparedStatements() {
 	//         WHERE s.foobar_model_id = ($1);
 	//     `)
 
-	postFoobarModelStmt, err = DB.Prepare(`
-        INSERT INTO foobar_models (
-            name, age, some_prop, some_nullable_prop, some_arr_prop,
-            date_created, last_updated,
-            id, user_id
-        )
-        VALUES (($1), ($2), ($3), ($4), ($5), ($6), ($7), ($8), ($9))
-    `)
+	if postFoobarModelStmt, err = DB.Prepare(`
+		INSERT INTO foobar_models (
+			name, age, some_prop, some_nullable_prop, some_arr_prop,
+			date_created, last_updated,
+			id, user_id
+		)
+		VALUES (($1), ($2), ($3), ($4), ($5), ($6), ($7), ($8), ($9))
+	`); err != nil {
+		panic(err)
+	}
 
-	updateFoobarStmt, err = DB.Prepare(`
-        UPDATE foobar_models
-        SET name = ($1),
-            age = ($2),
-            some_prop = ($3),
-            some_nullable_prop = ($4),
-            some_arr_prop = ($5),
-            date_created = ($6),
-            last_updated = ($7)
-        WHERE
-            id = ($8) AND
-            user_id = ($9);
-    `)
+	if updateFoobarStmt, err = DB.Prepare(`
+		UPDATE foobar_models
+		SET name = ($1),
+			age = ($2),
+			some_prop = ($3),
+			some_nullable_prop = ($4),
+			some_arr_prop = ($5),
+			date_created = ($6),
+			last_updated = ($7)
+		WHERE
+			id = ($8) AND
+			user_id = ($9);
+	`); err != nil {
+		panic(err)
+	}
 
-	deleteFoobarStmt, err = DB.Prepare(`
-        DELETE FROM foobar_models WHERE id = ($1) AND user_id = ($2);
-    `)
+	if deleteFoobarStmt, err = DB.Prepare(`
+		DELETE FROM foobar_models WHERE id = ($1) AND user_id = ($2);
+	`); err != nil {
+		panic(err)
+	}
 
 	// TODO
 	//     deleteSubmodelStmt, err = DB.Prepare(`
