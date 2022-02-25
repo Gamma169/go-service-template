@@ -80,6 +80,7 @@ func init() {
 	}
 
 	initFoobarModelsPreparedStatements()
+	initSubModelPreparedStatements()
 }
 
 func setReleaseRunningMode() {

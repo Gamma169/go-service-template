@@ -104,14 +104,6 @@ func (f *FoobarModel) ConvertToDatabaseInput(requesterId string) []interface{} {
 	}
 }
 
-// TODO
-// type SubModel struct {
-//     Id             string     `jsonapi:"primary,stress-test-cohorts"`
-//     FoobarModelId  string     `jsonapi:"attr,stress-test-id"`
-//     Type           string
-//     Value          string
-//     TempID         string     `jsonapi:"attr,__id__"`
-// }
 
 func initFoobarModelsPreparedStatements() {
 	var err error
