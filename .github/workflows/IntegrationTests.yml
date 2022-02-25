@@ -67,6 +67,7 @@ jobs:
           DATABASE_HOST: localhost
           RUN_MIGRATIONS: "true"
           REDIS_URL: "redis://:@localhost:6379"
+          BAZ_ID: 'some-id'
 
       - name: Add Node
         uses: actions/setup-node@v2
