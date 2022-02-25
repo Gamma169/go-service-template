@@ -1,10 +1,9 @@
 package baz
 
 import (
-	"log"
 	envs "github.com/Gamma169/go-server-helpers/environments"
+	"log"
 )
-
 
 var bazId string
 
