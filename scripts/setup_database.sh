@@ -20,4 +20,4 @@ echo 'Getting Dependencies'
 echo 'Building Server'
 ./scripts/build.sh foobar
 echo 'Starting server'
-REDIS_HOST=127.0.0.1 DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 RUN_MIGRATIONS="true" ./bin/foobar
+REDIS_HOST=127.0.0.1 DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 RUN_MIGRATIONS="true" BAZ_ID="some-id" ./bin/foobar

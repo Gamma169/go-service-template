@@ -1,6 +1,9 @@
 package main
 
 import (
+	// Note the slightly wonky import for local packages-- this is due to the distance of the go.mod file from the src code
+	"foobar/src/foobar/baz"
+
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -19,10 +22,10 @@ import (
 // docker run -d --name=foobar_redis -p 6379:6379 redis:6-alpine
 
 // Local
-// ./scripts/build.sh foobar && REDIS_HOST=127.0.0.1 DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 RUN_MIGRATIONS=true ./bin/foobar
+// ./scripts/build.sh foobar && REDIS_HOST=127.0.0.1 DATABASE_NAME=foo DATABASE_USER=postgres DATABASE_HOST=127.0.0.1 RUN_MIGRATIONS=true BAZ_ID=some-id ./bin/foobar
 
 // Docker
-// docker run -it --rm -e REDIS_HOST=127.0.0.1 -e DATABASE_NAME=foo  -e DATABASE_HOST=127.0.0.1 -e DATABASE_USER=postgres -e RUN_MIGRATIONS=true --net=host  --name=foobar gamma169/foobar
+// docker run -it --rm -e REDIS_HOST=127.0.0.1 -e DATABASE_NAME=foo  -e DATABASE_HOST=127.0.0.1 -e DATABASE_USER=postgres -e RUN_MIGRATIONS=true -e BAZ_ID=some-id --net=host  --name=foobar gamma169/foobar
 
 // Or
 // ./scripts/setup_database.sh
@@ -67,6 +70,8 @@ func init() {
 	// if we are missing any down the line
 	checkRequiredEnvs()
 
+	baz.InitBaz()
+
 	redisClient = db.InitRedis("", false, debug)
 	DB = db.InitPostgres("", debug)
 
@@ -87,6 +92,7 @@ func setReleaseRunningMode() {
 }
 
 func checkRequiredEnvs() {
+	baz.CheckRequiredEnvs()
 	db.CheckRequiredPostgresEnvs("")
 	db.CheckRequiredRedisEnvs("", false)
 }
@@ -137,6 +143,8 @@ func main() {
 	s.Path("/foobar-models").Methods(http.MethodPost).HandlerFunc(CreateOrUpdateFoobarModelHandler)
 	s.Path("/foobar-models/{modelId}").Methods(http.MethodPatch).HandlerFunc(CreateOrUpdateFoobarModelHandler)
 	s.Path("/foobar-models/{modelId}").Methods(http.MethodDelete).HandlerFunc(DeleteFoobarModelHandler)
+
+	s.Path("/baz").Methods(http.MethodGet).HandlerFunc(baz.BazHandler)
 
 	// s.Path("/").Methods("GET").HandlerFunc(GetUserHandler)
 

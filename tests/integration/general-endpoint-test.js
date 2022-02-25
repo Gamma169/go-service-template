@@ -20,6 +20,11 @@ const endpointsToTest = [
     endpoint: '/user/foobar-models/id',
     methods: ['patch', 'delete'],
   },
+  {
+    endpoint: '/user/baz',
+    methods: ['get'],
+  },
+
 ];
 const improperIdHeaders = [
   'qwe',
