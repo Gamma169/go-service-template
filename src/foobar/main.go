@@ -56,6 +56,9 @@ var postFoobarModelStmt *sql.Stmt
 var updateFoobarStmt *sql.Stmt
 var deleteFoobarStmt *sql.Stmt
 
+var getSubModelsForUserStmt *sql.Stmt
+var deleteSubModelsForFoobarModelStmt *sql.Stmt
+
 /*********************************************
  * Init and Shutdown
  * *******************************************/
@@ -80,6 +83,7 @@ func init() {
 	}
 
 	initFoobarModelsPreparedStatements()
+	initSubModelPreparedStatements()
 }
 
 func setReleaseRunningMode() {

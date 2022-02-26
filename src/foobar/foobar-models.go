@@ -24,10 +24,9 @@ type FoobarModel struct {
 	LastUpdated time.Time `json:"lastUpdated" jsonapi:"attr,last-updated"`
 
 	// Only needed for jsonapi save-relationships-mixin
-	TempID string `jsonapi:"attr,__id__"`
+	TempID string `json:"__id__" jsonapi:"attr,__id__"`
 
-	// TODO
-	// SubModels         []*SubModel  `jsonapi:"relation,sub-models"`
+	SubModels []*SubModel `json:"subModels" jsonapi:"relation,sub-models"`
 }
 
 func (f *FoobarModel) Validate() (err error) {
@@ -38,6 +37,16 @@ func (f *FoobarModel) Validate() (err error) {
 		err = errors.New("SomeProp cannot equal 'bad prop'")
 	} else {
 		err = db.CheckStructFieldsForInjection(*f)
+	}
+
+	for _, subModel := range f.SubModels {
+		if f.Id != "" && f.Id != *subModel.FoobarModelId {
+			err = errors.New("Cannot assign subModel to another model")
+			return
+		}
+		if err = subModel.Validate(); err != nil {
+			return
+		}
 	}
 
 	return
@@ -88,6 +97,12 @@ func (f *FoobarModel) ScanFromRowsOrRow(rowsOrRow interface {
 }
 
 func (f *FoobarModel) ConvertToDatabaseInput(requesterId string) []interface{} {
+	if f.Id == ZERO_UUID || strings.TrimSpace(f.Id) == "" {
+		f.Id = uuid.New().String()
+		for _, subModel := range f.SubModels {
+			subModel.FoobarModelId = &f.Id
+		}
+	}
 	f.LastUpdated = time.Now()
 	return []interface{}{
 		f.Name,
@@ -104,15 +119,6 @@ func (f *FoobarModel) ConvertToDatabaseInput(requesterId string) []interface{} {
 	}
 }
 
-// TODO
-// type SubModel struct {
-//     Id             string     `jsonapi:"primary,stress-test-cohorts"`
-//     FoobarModelId  string     `jsonapi:"attr,stress-test-id"`
-//     Type           string
-//     Value          string
-//     TempID         string     `jsonapi:"attr,__id__"`
-// }
-
 func initFoobarModelsPreparedStatements() {
 	var err error
 
@@ -125,13 +131,6 @@ func initFoobarModelsPreparedStatements() {
 	`); err != nil {
 		panic(err)
 	}
-
-	// TODO Can make one for all as well to avoid multiple networks calls
-	//     getSubmodelForFoobarModelStmt, err = DB.Prepare(`
-	//         SELECT
-	//         FROM submodels s
-	//         WHERE s.foobar_model_id = ($1);
-	//     `)
 
 	if postFoobarModelStmt, err = DB.Prepare(`
 		INSERT INTO foobar_models (
@@ -165,11 +164,6 @@ func initFoobarModelsPreparedStatements() {
 	`); err != nil {
 		panic(err)
 	}
-
-	// TODO
-	//     deleteSubmodelStmt, err = DB.Prepare(`
-	//         DELETE FROM submodels WHERE foobar_model_id = ($1);
-	//     `)
 
 }
 
@@ -205,7 +199,10 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer func() { server.SendErrorOnError(err, errStatus, w, r, logError) }()
 
-	var model FoobarModel
+	// Need to initialize array or json response will be null
+	model := FoobarModel{
+		SubModels: []*SubModel{},
+	}
 	if err = server.PreProcessInputFromHeaders(&model, 32768, w, r); err != nil {
 		errStatus = http.StatusBadRequest
 		return
@@ -215,9 +212,6 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 	requesterId := r.Header.Get(REQUESTER_ID_HEADER) // Should exist and be valid because of middleware
 	if r.Method == http.MethodPost {
 		respStatus = http.StatusCreated
-		if model.Id == ZERO_UUID || strings.TrimSpace(model.Id) == "" {
-			model.Id = uuid.New().String()
-		}
 		model.DateCreated = time.Now()
 		if err = postModelToDatabase(&model, requesterId, false); err != nil {
 			return
@@ -264,15 +258,34 @@ func getModelsForRequester(requesterId string) ([]*FoobarModel, error) {
 	defer fbRows.Close()
 
 	foobarModels := []*FoobarModel{}
+	modelsMap := map[string]*FoobarModel{}
 
 	for fbRows.Next() {
-		model := FoobarModel{}
+		// Need to initialze the array or json response will return it as null
+		model := FoobarModel{
+			SubModels: []*SubModel{},
+		}
 
 		if err = model.ScanFromRowsOrRow(fbRows); err != nil {
 			return nil, err
 		}
 
 		foobarModels = append(foobarModels, &model)
+		modelsMap[model.Id] = &model
+	}
+
+	subModels, err := getSubModelsForRequester(requesterId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, subModel := range subModels {
+		if subModel.FoobarModelId != nil {
+			model, ok := modelsMap[*subModel.FoobarModelId]
+			if ok {
+				model.SubModels = append(model.SubModels, subModel)
+			}
+		}
 	}
 
 	return foobarModels, nil
@@ -291,6 +304,12 @@ func postModelToDatabase(model *FoobarModel, requesterId string, update bool) er
 		}
 	}
 
+	if len(model.SubModels) > 0 {
+		if err := postSubModelsToDatabase(model.SubModels, model.Id, requesterId, update); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -301,5 +320,7 @@ func deleteModelForRequester(fileId string, requesterId string) (err error) {
 	// But I think that is unnecessary for now.  Just wanted to log possibility for posterity
 	// https://pkg.go.dev/database/sql#Result
 	_, err = deleteFoobarStmt.Exec(fileId, requesterId)
+	// Note we do not need to delete the sub_models because of the `cascade` foreign key property in the migrations
+	// If you delete its foregn kety, anny associated sub_models will also be deleted.
 	return
 }
