@@ -26,8 +26,7 @@ type FoobarModel struct {
 	// Only needed for jsonapi save-relationships-mixin
 	TempID string `jsonapi:"attr,__id__"`
 
-	// TODO
-	// SubModels         []*SubModel  `jsonapi:"relation,sub-models"`
+	SubModels         []*SubModel  `jsonapi:"relation,sub-models"`
 }
 
 func (f *FoobarModel) Validate() (err error) {
@@ -38,6 +37,12 @@ func (f *FoobarModel) Validate() (err error) {
 		err = errors.New("SomeProp cannot equal 'bad prop'")
 	} else {
 		err = db.CheckStructFieldsForInjection(*f)
+	}
+
+	for _, subModel := range f.SubModels {
+		if err = subModel.Validate(); err != nil {
+			return
+		}
 	}
 
 	return
@@ -88,6 +93,12 @@ func (f *FoobarModel) ScanFromRowsOrRow(rowsOrRow interface {
 }
 
 func (f *FoobarModel) ConvertToDatabaseInput(requesterId string) []interface{} {
+	if f.Id == ZERO_UUID || strings.TrimSpace(f.Id) == "" {
+		f.Id = uuid.New().String()
+		for _, subModel := range f.SubModels {
+			subModel.FoobarModelId = &f.Id
+		}
+	}
 	f.LastUpdated = time.Now()
 	return []interface{}{
 		f.Name,
@@ -117,13 +128,6 @@ func initFoobarModelsPreparedStatements() {
 	`); err != nil {
 		panic(err)
 	}
-
-	// TODO Can make one for all as well to avoid multiple networks calls
-	//     getSubmodelForFoobarModelStmt, err = DB.Prepare(`
-	//         SELECT
-	//         FROM submodels s
-	//         WHERE s.foobar_model_id = ($1);
-	//     `)
 
 	if postFoobarModelStmt, err = DB.Prepare(`
 		INSERT INTO foobar_models (
@@ -157,11 +161,6 @@ func initFoobarModelsPreparedStatements() {
 	`); err != nil {
 		panic(err)
 	}
-
-	// TODO
-	//     deleteSubmodelStmt, err = DB.Prepare(`
-	//         DELETE FROM submodels WHERE foobar_model_id = ($1);
-	//     `)
 
 }
 
@@ -207,9 +206,6 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 	requesterId := r.Header.Get(REQUESTER_ID_HEADER) // Should exist and be valid because of middleware
 	if r.Method == http.MethodPost {
 		respStatus = http.StatusCreated
-		if model.Id == ZERO_UUID || strings.TrimSpace(model.Id) == "" {
-			model.Id = uuid.New().String()
-		}
 		model.DateCreated = time.Now()
 		if err = postModelToDatabase(&model, requesterId, false); err != nil {
 			return
