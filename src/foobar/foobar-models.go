@@ -252,6 +252,7 @@ func getModelsForRequester(requesterId string) ([]*FoobarModel, error) {
 	defer fbRows.Close()
 
 	foobarModels := []*FoobarModel{}
+	modelsMap := map[string]*FoobarModel{}
 
 	for fbRows.Next() {
 		model := FoobarModel{}
@@ -261,6 +262,21 @@ func getModelsForRequester(requesterId string) ([]*FoobarModel, error) {
 		}
 
 		foobarModels = append(foobarModels, &model)
+		modelsMap[model.Id] = &model
+	}
+
+	subModels, err := getSubModelsForRequester(requesterId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, subModel := range subModels {
+		if subModel.FoobarModelId != nil {
+			model, ok := modelsMap[*subModel.FoobarModelId]
+			if ok {
+				model.SubModels = append(model.SubModels, subModel)
+			}
+		}
 	}
 
 	return foobarModels, nil
@@ -279,6 +295,12 @@ func postModelToDatabase(model *FoobarModel, requesterId string, update bool) er
 		}
 	}
 
+	if len(model.SubModels) > 0 {
+		if err := postSubModelsToDatabase(model.SubModels, model.Id, requesterId, update); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -289,5 +311,7 @@ func deleteModelForRequester(fileId string, requesterId string) (err error) {
 	// But I think that is unnecessary for now.  Just wanted to log possibility for posterity
 	// https://pkg.go.dev/database/sql#Result
 	_, err = deleteFoobarStmt.Exec(fileId, requesterId)
+	// Note we do not need to delete the sub_models because of the `cascade` foreign key property in the migrations
+	// If you delete its foregn kety, anny associated sub_models will also be deleted.
 	return
 }
