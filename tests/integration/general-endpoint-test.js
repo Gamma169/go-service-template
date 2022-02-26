@@ -32,7 +32,7 @@ const improperIdHeaders = [
   null,
 ];
 
-describe.skip("General Endpoint Tests", function() {
+describe("General Endpoint Tests", function() {
 
   describe("Endpoints With user-id Header Requirements Tests", function() {
     endpointsToTest.forEach(function({endpoint, methods}) {

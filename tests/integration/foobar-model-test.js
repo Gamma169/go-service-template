@@ -407,7 +407,11 @@ describe('foobar Model Tests:', function() {
     describe('Delete Model Tests', function() {
       const modelToDelete = MOCK_MODELS[0];
 
-      it('should be able to delete a model that belongs to the requester', function(done) {
+      it('should be able to delete a model INCLUDING Sub Models that belongs to the requester', function(done) {
+        // Make sure model deleting has sub models in order to make sure we delete them as well
+        const subModelsToDelete = MOCK_SUB_MODELS.filter(s => s.foobar_model_id === modelToDelete.id);
+        chai.assert.isAbove(subModelsToDelete.length, 0, "model to delete should have sub models associated with it");
+
         chai.request(SERVICE_URL)
           .delete('/user/foobar-models/'+ modelToDelete.id)
           .set(REQUESTER_ID_HEADER, modelToDelete.user_id)
@@ -420,12 +424,17 @@ describe('foobar Model Tests:', function() {
             const nonDeletedModelIds = MOCK_MODELS.filter(model => model.id !== modelToDelete.id).map(m => m.id);
             const returnedIds = pgResp.rows.map(m => m.id);
             chai.assert.sameMembers(nonDeletedModelIds, returnedIds);
+            return testsPGClient.query(`SELECT id FROM sub_models WHERE foobar_model_id = '${modelToDelete.id}'`);
+          })
+          .then(function(pgResp) {
+            chai.assert.ok(pgResp.rows);
+            chai.assert.equal(pgResp.rows.length, 0);
             done();
           })
           .catch(done);
       });
 
-      it('should NOT delete an analytics file that does not belong to the owner', function(done) {
+      it('should NOT delete a model that does not belong to the owner', function(done) {
         const modelOwnerId = modelToDelete.user_id;
         const badClientId = USER_IDS.filter(id => id !== modelOwnerId)[0];
         chai.request(SERVICE_URL)
