@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS sub_models (
 	date_created timestamp with time zone NOT NULL DEFAULT NOW(),
 	last_updated timestamp with time zone NOT NULL DEFAULT NOW(),
 
-	FOREIGN KEY (foobar_model) REFERENCES foobar_models(id)
+	FOREIGN KEY (foobar_model_id) REFERENCES foobar_models(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
