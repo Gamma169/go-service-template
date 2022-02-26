@@ -12,6 +12,7 @@ const {
   REQUESTER_ID_HEADER,
   USER_IDS,
   MOCK_MODELS,
+  MOCK_SUB_MODELS,
   // arrayToStr,
   dbSetupModels,
   dbTeardownQuery,
@@ -82,7 +83,10 @@ describe('foobar Model Tests:', function() {
               chai.assert.equal(returnedModels.length, modelsForId.length, "returns same number of models as in testcases");
               modelsForId.forEach(mockModel => {
                 const returnedModel = returnedModels.find(retModel => retModel.id === mockModel.id);
+                const subModels = MOCK_SUB_MODELS.filter(model => model.foobar_model_id === returnedModel.id)
+                  .map(s => ({id: s.id, foobarModelId: s.foobar_model_id, value: s.value, valueInt: s.value_int, __id__: ""}));
 
+                console.log(returnedModel)
                 chai.assert.deepInclude(returnedModel, {
                   id: mockModel.id,
                   name: mockModel.name,
@@ -90,6 +94,7 @@ describe('foobar Model Tests:', function() {
                   someProp: mockModel.some_prop,
                   someNullableProp: mockModel.some_nullable_prop,
                   someArrProp: mockModel.some_arr_prop,
+                  subModels: subModels,
                 }, "models match");
 
                 // golang json encoding time field returns much more precision than what I provide in the mocks so we do date checking seperately

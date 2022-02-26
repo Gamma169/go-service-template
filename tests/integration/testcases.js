@@ -38,6 +38,24 @@ const MOCK_MODELS = [
   },
 ];
 
+const MOCK_SUB_MODELS = [
+  {
+    id:'b98808f9-3cd6-4aeb-bb15-db0eeece1574',
+    user_id: MOCK_MODELS[0].user_id,
+    foobar_model_id: MOCK_MODELS[0].id,
+    value: 'some-val',
+    value_int: 567,
+  },
+  {
+    id: '89b2cbd1-6060-4fc7-beb9-15d190540394',
+    user_id: MOCK_MODELS[0].user_id,
+    foobar_model_id: MOCK_MODELS[0].id,
+    value: 'another-val',
+    value_int: 879,
+  }
+
+];
+
 function arrayToStr(arr) {
   return arr.join(DB_ARR_DELIMITER);
 }
@@ -59,10 +77,20 @@ function dbSetupModels(pgClient) {
       );`);
   });
 
-  return pgClient.query(modelInsertString);
+  let subModelInsertString = '';
+  MOCK_SUB_MODELS.forEach(function(subModel) {
+    subModelInsertString = subModelInsertString.concat(`
+      INSERT INTO sub_models (
+        id, user_id, foobar_model_id, value, value_int
+      ) VALUES (
+        '${subModel.id}', '${subModel.user_id}', '${subModel.foobar_model_id}', '${subModel.value}', '${subModel.value_int}'
+      );`);
+  });
+
+  return pgClient.query(modelInsertString).then(() => pgClient.query(subModelInsertString));
 }
 
-const dbTeardownQuery = `DELETE FROM foobar_models;`;
+const dbTeardownQuery = `DELETE FROM foobar_models; DELETE FROM sub_models`;
 
 
 
@@ -71,6 +99,7 @@ module.exports = {
   REQUESTER_ID_HEADER,
   USER_IDS,
   MOCK_MODELS,
+  MOCK_SUB_MODELS,
   arrayToStr,
   dbSetupModels,
   dbTeardownQuery,

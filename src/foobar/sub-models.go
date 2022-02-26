@@ -74,7 +74,7 @@ func initSubModelPreparedStatements() {
 
     if getSubModelsForUserStmt, err = DB.Prepare(`
         SELECT s.id,
-            s.user_id, s.foobar_model_id, s.value, s.value_int
+            s.foobar_model_id, s.value, s.value_int
             FROM sub_models s
         WHERE s.user_id = ($1);
     `); err != nil {

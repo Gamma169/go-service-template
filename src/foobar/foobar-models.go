@@ -26,7 +26,7 @@ type FoobarModel struct {
 	// Only needed for jsonapi save-relationships-mixin
 	TempID string `jsonapi:"attr,__id__"`
 
-	SubModels         []*SubModel  `jsonapi:"relation,sub-models"`
+	SubModels         []*SubModel  `json:"subModels" jsonapi:"relation,sub-models"`
 }
 
 func (f *FoobarModel) Validate() (err error) {
@@ -255,7 +255,10 @@ func getModelsForRequester(requesterId string) ([]*FoobarModel, error) {
 	modelsMap := map[string]*FoobarModel{}
 
 	for fbRows.Next() {
-		model := FoobarModel{}
+		// Need to initialze the array or json response will return it as null
+		model := FoobarModel{
+			SubModels: []*SubModel{},
+		}
 
 		if err = model.ScanFromRowsOrRow(fbRows); err != nil {
 			return nil, err
@@ -269,6 +272,7 @@ func getModelsForRequester(requesterId string) ([]*FoobarModel, error) {
 	if err != nil {
 		return nil, err
 	}
+
 
 	for _, subModel := range subModels {
 		if subModel.FoobarModelId != nil {
