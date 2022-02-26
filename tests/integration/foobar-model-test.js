@@ -4,6 +4,8 @@ chai.use(chaiHttp);
 
 const { Client } = require('pg');
 
+const { v4: uuidv4 } = require('uuid');
+
 // Make sure you require the health check endpoint test so that it runs first
 require('./health-check-test');
 
@@ -13,7 +15,7 @@ const {
   USER_IDS,
   MOCK_MODELS,
   MOCK_SUB_MODELS,
-  // arrayToStr,
+  arrayToStr,
   dbSetupModels,
   dbTeardownQuery,
 } = require('./testcases.js');
@@ -86,7 +88,6 @@ describe('foobar Model Tests:', function() {
                 const subModels = MOCK_SUB_MODELS.filter(model => model.foobar_model_id === returnedModel.id)
                   .map(s => ({id: s.id, foobarModelId: s.foobar_model_id, value: s.value, valueInt: s.value_int, __id__: ""}));
 
-                console.log(returnedModel)
                 chai.assert.deepInclude(returnedModel, {
                   id: mockModel.id,
                   name: mockModel.name,
@@ -119,9 +120,18 @@ describe('foobar Model Tests:', function() {
             .then(function(resp) {
 
               const returnedModels = resp.body;
+              const included = returnedModels.included;
               chai.assert.equal(returnedModels.data.length, modelsForId.length, "returns same number of models as in testcases");
               modelsForId.forEach(mockModel => {
                 const returnedModel = returnedModels.data.find(retModel => retModel.id === mockModel.id);
+                const subModels = MOCK_SUB_MODELS.filter(model => model.foobar_model_id === returnedModel.id);
+                const relationships = {
+                  'sub-models': {
+                    data: subModels.map(s => (
+                      {id: s.id, type: 'sub-models'}
+                    )),
+                  },
+                };
 
                 chai.assert.deepEqual(returnedModel, {
                   attributes: {
@@ -138,13 +148,32 @@ describe('foobar Model Tests:', function() {
                   },
                   id: mockModel.id,
                   type: 'foobar-model',
+                  relationships,
                 }, "models match");
 
+                if (subModels.length > 0) {
+                  chai.assert.equal(included.length, subModels.length);
+
+                  const expectedIncluded = subModels.map(s => (
+                    {
+                      id: s.id,
+                      type: "sub-models",
+                      attributes: {
+                        'foobar-model-id': s.foobar_model_id,
+                        'value': s.value,
+                        'value-int': s.value_int,
+                        '__id__': '',
+                      }
+                    }
+                  ));
+
+                  // We use `sameDeepMembers` because included array can be in any order
+                  chai.assert.sameDeepMembers(included, expectedIncluded, "included matches");
+                }
               });
 
               // Test is sucessful
               done();
-
             })
             .catch(done);
         });
@@ -156,47 +185,215 @@ describe('foobar Model Tests:', function() {
 
     describe('Post Model Tests', function() {
 
-      it('should be able to add new model WITHOUT id to the database using json', function(done) {
-        const input = {
-          name: 'some post model',
-          age: 44,
-          someProp: 'qweqweqwe',
-          someNullableProp: null,
-          someArrProp:['zxc','sdf','xcv', 'popop'],
+      /********* TEST HELPERS *********/
+
+      const generalInput = {
+        name: 'some post model',
+        age: 44,
+        someProp: 'qweqweqwe',
+        someNullableProp: null,
+        someArrProp:['zxc','sdf','xcv', 'popop'],
+        __id__: uuidv4(),
+      };
+
+      function testFoobarModelDatabaseInput(pgResp, newModelId) {
+        chai.assert.equal(1, pgResp.rows.length);
+
+        const expectedRow = {
+          id: newModelId,
+          user_id: USER_IDS[1],
+          name: generalInput.name,
+          age: generalInput.age,
+          some_prop: generalInput.someProp,
+          some_nullable_prop: generalInput.someNullableProp,
+          some_arr_prop: arrayToStr(generalInput.someArrProp),
         };
 
-        chai.request(SERVICE_URL)
-          .post('/user/foobar-models')
-          .set('user-id', USER_IDS[1])
-          .set('Content-Type', 'application/json')
-          .send(input)
-          .then(function(serverResp) {
-            const newModel = serverResp.body;
-            const newModelId = newModel.id;
-            // TODO: check newModel
+        chai.assert.deepEqual(pgResp.rows[0], expectedRow);
+      }
 
-            return testsPGClient.query(`SELECT id FROM foobar_models WHERE id = '${newModelId}'`);
-          })
-          .then(function(pgResp) {
-            chai.assert.equal(1, pgResp.rows.length);
-            // TODO: finish
+      /********* TESTS *********/
 
+      describe('JSON Input Format', function() {
+
+        /********* TEST HELPERS *********/
+
+        function makeRequest(input) {
+          return chai.request(SERVICE_URL)
+            .post('/user/foobar-models')
+            .set('user-id', USER_IDS[1])
+            .set('Content-Type', 'application/json')
+            .send(input);
+        }
+
+        function testServerResponse(serverResp) {
+          const newModel = serverResp.body;
+          const newModelId = newModel.id;
+
+          chai.assert.deepInclude(newModel, generalInput);
+          return newModelId;
+        }
+
+        /********* TESTS *********/
+
+        describe('WITHOUT Sub Models', function() {
+          it('should be able to add new model WITHOUT id + WITHOUT Sub Models to the database using json', function(done) {
+            let newModelId;
+            makeRequest(generalInput)
+              .then(function(serverResp) {
+                newModelId = testServerResponse(serverResp);
+                chai.assert.deepEqual(serverResp.body.subModels, []);
+                return testsPGClient.query(`SELECT 
+                    id, user_id, name, age, some_prop, some_nullable_prop, some_arr_prop
+                  FROM foobar_models WHERE id = '${newModelId}'`);
+              })
+              .then(function(pgResp) {
+                testFoobarModelDatabaseInput(pgResp, newModelId);
+                done();
+              })
+              .catch(done);
+          });
+
+          it('should be able to add new model WITH id + WITHOUT Sub Models to the database using json', function(done) {
+            const modelId = uuidv4();
+            const input = Object.assign({id: modelId}, generalInput);
+            makeRequest(input)
+              .then(function(serverResp) {
+                testServerResponse(serverResp, []);
+                chai.assert.deepEqual(serverResp.body.subModels, []);
+                return testsPGClient.query(`SELECT 
+                    id, user_id, name, age, some_prop, some_nullable_prop, some_arr_prop
+                  FROM foobar_models WHERE id = '${modelId}'`);
+              })
+              .then(function(pgResp) {
+                testFoobarModelDatabaseInput(pgResp, modelId);
+                done();
+              })
+              .catch(done);
+          });
+
+        });
+
+        describe('INCLUDING Sub Models', function() {
+
+          /********* TEST HELPERS *********/
+
+          const subModels = [
+            {
+              foobarModelId: '',
+              value: uuidv4(),
+              valueInt: Math.floor(Math.random() * 100),
+              __id__: uuidv4(),
+            },
+            {
+              foobarModelId: '',
+              value: uuidv4(),
+              valueInt: Math.floor(Math.random() * 100),
+              __id__: uuidv4(),
+            }
+          ];
+          const input = Object.assign({subModels}, generalInput);
+
+          function testSubModelResponse(serverResp, newModelId) {
+            const subModels = serverResp.body.subModels;
+            const newIds = subModels.map(s => s.id);
+            const expectedSubModelResp = subModels.map((s, i) => Object.assign({}, s, {id: newIds[i], foobarModelId: newModelId}));
+            chai.assert.sameDeepMembers(subModels, expectedSubModelResp);
+            return newIds;
+          }
+
+          function testSubModelDatabaseResponse(pgResp, newSubModelIds) {
+            chai.assert.equal(pgResp.rows.length, subModels.length);
+
+            const expectedPgResp = subModels.map((s, idx) => ({
+              id: newSubModelIds[idx],
+              user_id: USER_IDS[1],
+              value: subModels[idx].value,
+              value_int: subModels[idx].valueInt,
+            }));
+
+            chai.assert.deepEqual(pgResp.rows, expectedPgResp);
+          }
+
+          /********* TESTS *********/
+
+          it('should be able to add new model WITHOUT id + INCLUDING Sub Models to the database using json', function(done) {
+            let newModelId;
+            let newSubModelIds;
+            makeRequest(input)
+              .then(function(serverResp) {
+                newModelId = testServerResponse(serverResp);
+                newSubModelIds = testSubModelResponse(serverResp, newModelId);
+                return testsPGClient.query(`SELECT 
+                    id, user_id, name, age, some_prop, some_nullable_prop, some_arr_prop
+                  FROM foobar_models WHERE id = '${newModelId}'`);
+              })
+              .then(function(pgResp) {
+                testFoobarModelDatabaseInput(pgResp, newModelId);
+                return testsPGClient.query(`SELECT 
+                    id, user_id, value, value_int
+                  FROM sub_models WHERE foobar_model_id = '${newModelId}'`);
+              })
+              .then(function(pgResp) {
+                testSubModelDatabaseResponse(pgResp, newSubModelIds);
+                done();
+              })
+              .catch(done);
+          });
+
+          it('should be able to add new model WITH id + INCLUDING Sub Models to the database using json', function(done) {
+            const modelId = uuidv4();
+            const subModelsWithIds = subModels.map(s => Object.assign({}, s, {id: uuidv4(), foobarModelId: modelId}));
+            const subModelIds = subModelsWithIds.map(s => s.id);
+            const input = Object.assign({id: modelId, subModels: subModelsWithIds}, generalInput);
+            makeRequest(input)
+              .then(function(serverResp) {
+                testServerResponse(serverResp);
+                testSubModelResponse(serverResp, modelId);
+                return testsPGClient.query(`SELECT 
+                    id, user_id, name, age, some_prop, some_nullable_prop, some_arr_prop
+                  FROM foobar_models WHERE id = '${modelId}'`);
+              })
+              .then(function(pgResp) {
+                testFoobarModelDatabaseInput(pgResp, modelId);
+                return testsPGClient.query(`SELECT 
+                    id, user_id, value, value_int
+                  FROM sub_models WHERE foobar_model_id = '${modelId}'`);
+              })
+              .then(function(pgResp) {
+                testSubModelDatabaseResponse(pgResp, subModelIds);
+                done();
+              })
+              .catch(done);
+          });
+
+        });
+
+      });
+
+      describe('JSONAPI Input Format', function() {
+
+        describe('WITHOUT Sub Models', function() {
+          // TODO
+          it.skip('should be able to add new model WITHOUT id + WITHOUT Sub Models to the database using jsonAPI', function(done) {
             done();
-          })
-          .catch(done);
-      });
+          });
 
-      // TODO
-      it('should be able to add new model WITHOUT id to the database using jsonAPI', function(done) {
-        done();
-      });
+          it.skip('should be able to add new model WITH id + WITHOUT Sub Models to the database using jsonAPI', function(done) {
+            done();
+          });
+        });
 
-      it('should be able to add new model WITH id to the database using jsonAPI', function(done) {
-        done();
-      });
+        describe('INCLUDING Sub Models', function() {
+          it.skip('should be able to add new model WITHOUT id + INCLUDING Sub Models to the database using jsonAPI', function(done) {
+            done();
+          });
 
-      it('should be able to add new model WITH id to the database using jsonAPI', function(done) {
-        done();
+          it.skip('should be able to add new model WITH id + INCLUDING Sub Models to the database using jsonAPI', function(done) {
+            done();
+          });
+        });
+
       });
 
     });

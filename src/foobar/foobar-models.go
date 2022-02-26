@@ -24,7 +24,7 @@ type FoobarModel struct {
 	LastUpdated time.Time `json:"lastUpdated" jsonapi:"attr,last-updated"`
 
 	// Only needed for jsonapi save-relationships-mixin
-	TempID string `jsonapi:"attr,__id__"`
+	TempID string `json:"__id__" jsonapi:"attr,__id__"`
 
 	SubModels []*SubModel `json:"subModels" jsonapi:"relation,sub-models"`
 }
@@ -40,6 +40,10 @@ func (f *FoobarModel) Validate() (err error) {
 	}
 
 	for _, subModel := range f.SubModels {
+		if f.Id != "" && f.Id != *subModel.FoobarModelId {
+			err = errors.New("Cannot assign subModel to another model")
+			return
+		}
 		if err = subModel.Validate(); err != nil {
 			return
 		}
@@ -195,7 +199,10 @@ func CreateOrUpdateFoobarModelHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer func() { server.SendErrorOnError(err, errStatus, w, r, logError) }()
 
-	var model FoobarModel
+	// Need to initialize array or json response will be null
+	model := FoobarModel{
+		SubModels: []*SubModel{},
+	}
 	if err = server.PreProcessInputFromHeaders(&model, 32768, w, r); err != nil {
 		errStatus = http.StatusBadRequest
 		return
