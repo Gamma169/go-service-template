@@ -10,6 +10,8 @@ function getPort() {
 
 const SERVICE_URL = `http://127.0.0.1:${getPort()}`;
 
+const DATABASE_NAME = process.env.DATABASE_NAME || 'foo'; // default is from 'scripts/setup_database.sh'
+
 const USER_IDS = ["47cacb0f-94d3-490a-80a0-e9ac77fe7778", "3643e69f-f4fe-4b88-8a91-fa4a7ac9bdd8"];
 
 
@@ -96,6 +98,7 @@ const dbTeardownQuery = `DELETE FROM foobar_models; DELETE FROM sub_models`;
 
 module.exports = {
   SERVICE_URL,
+  DATABASE_NAME,
   REQUESTER_ID_HEADER,
   USER_IDS,
   MOCK_MODELS,

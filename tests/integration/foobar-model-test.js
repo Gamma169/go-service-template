@@ -11,6 +11,7 @@ require('./health-check-test');
 
 const {
   SERVICE_URL,
+  DATABASE_NAME,
   REQUESTER_ID_HEADER,
   USER_IDS,
   MOCK_MODELS,
@@ -19,10 +20,6 @@ const {
   dbSetupModels,
   dbTeardownQuery,
 } = require('./testcases.js');
-
-
-// From ./scripts/setup_database
-const DATABASE_NAME = 'foo';
 
 let testsPGClient;
 
