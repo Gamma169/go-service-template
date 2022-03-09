@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SERVICE_NAME: foobar
+      DATABASE_NAME: foo-db
     strategy:
       matrix:
         go: [ '1.17' ]
@@ -27,7 +28,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: somePassIdk
           POSTGRES_HOST_AUTH_METHOD: trust
-          POSTGRES_DB: foo
+          POSTGRES_DB: ${DATABASE_NAME}
 
         # Set health checks to wait until postgres has started
         options: >-
@@ -61,7 +62,7 @@ jobs:
       - name: Run Service In Background
         run: ./bin/${SERVICE_NAME} &
         env:
-          DATABASE_NAME: foo
+          DATABASE_NAME: ${DATABASE_NAME}
           DATABASE_USER: postgres
           DATABASE_PASSWORD: somePassIdk
           DATABASE_HOST: localhost
@@ -76,3 +77,5 @@ jobs:
       
       - name: Run Tests
         run: ./scripts/run_tests.sh
+        env:
+          DATABASE_NAME: ${DATABASE_NAME}
